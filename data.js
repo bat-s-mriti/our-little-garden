@@ -1,0 +1,50 @@
+// The starting content, shown until you (or the exported "content" folder) provide your own.
+// You don't need to edit this file: open the site with ?edit and change everything there.
+
+window.SITE = {
+  schema: 2,
+  title: "Our Little Garden",
+  subtitle: "Every day with you blooms into something beautiful",
+  names: ["Me", "My Love"],
+  since: "2026-01-01",
+  currency: "$",
+  theme: "scrapbook",
+  stickers: ["sunflower", "lily", "mushroom"],
+  bucket: [
+    { id: "b1", text: "Watch a sunrise together", done: false, doneDate: "" },
+    { id: "b2", text: "Cook a brand new recipe", done: false, doneDate: "" }
+  ],
+  jar: [
+    { id: "j1", text: "Picnic in the park" },
+    { id: "j2", text: "Movie night with homemade popcorn" },
+    { id: "j3", text: "Try a café we've never been to" }
+  ],
+  letters: [
+    { id: "l1", when: "Open when you miss me", from: "a", unlock: "", body: "Replace this with your own letter. Write something that will make her smile on a hard day." }
+  ],
+  days: [
+    {
+      slug: "2026-02-14", date: "2026-02-14", title: "Our first picnic", badge: "sunflower", mood: "Happy", weather: "Sunny", place: "The park",
+      sections: [
+        { id: "s1", type: "note", title: "", data: { text: "Write a little diary entry about this day here. What you did, what made you laugh, what you want to remember." } },
+        { id: "s2", type: "gallery", title: "", data: { items: [{ src: "", kind: "image", caption: "Add a caption" }, { src: "", kind: "image", caption: "Another memory" }, { src: "", kind: "image", caption: "One more" }] } },
+        { id: "s3", type: "food", title: "", data: { rows: [{ dish: "Sandwiches", where: "Made at home", rating: 5 }, { dish: "Lemonade", where: "The corner shop", rating: 4 }] } },
+        { id: "s4", type: "spending", title: "", data: { rows: [{ item: "Snacks", amount: 8 }, { item: "Blanket", amount: 12 }] } }
+      ]
+    },
+    {
+      slug: "2026-03-08", date: "2026-03-08", title: "Rainy day, mushroom walk", badge: "mushroom", mood: "Cozy", weather: "Rainy", place: "The forest trail",
+      sections: [
+        { id: "s5", type: "note", title: "", data: { text: "Replace this with your own story." } },
+        { id: "s6", type: "gallery", title: "", data: { items: [{ src: "", kind: "image", caption: "Tiny mushrooms everywhere" }, { src: "", kind: "image", caption: "Matching umbrellas" }] } }
+      ]
+    },
+    {
+      slug: "2026-04-20", date: "2026-04-20", title: "Lilies in bloom", badge: "lily", mood: "Dreamy", weather: "Warm and breezy", place: "The flower market",
+      sections: [
+        { id: "s7", type: "note", title: "", data: { text: "Replace this with your own story." } },
+        { id: "s8", type: "gallery", title: "", data: { items: [{ src: "", kind: "image", caption: "Her favourite flowers" }, { src: "", kind: "image", caption: "Us, of course" }, { src: "", kind: "image", caption: "Golden hour" }] } }
+      ]
+    }
+  ]
+};
