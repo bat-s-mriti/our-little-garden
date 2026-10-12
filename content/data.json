@@ -34,10 +34,6 @@
    "text": "Picnic in the park"
   },
   {
-   "id": "j2",
-   "text": "Movie night with homemade popcorn"
-  },
-  {
    "id": "j3",
    "text": "Try a café we've never been to"
   }
@@ -231,5 +227,5 @@
   "a": {},
   "b": {}
  },
- "publishedAt": "2026-10-12T10:20:00.760Z"
+ "publishedAt": "2026-10-12T11:49:43.288Z"
 }
