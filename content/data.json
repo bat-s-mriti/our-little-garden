@@ -36,6 +36,10 @@
   {
    "id": "j3",
    "text": "Try a café we've never been to"
+  },
+  {
+   "id": "mv56wh4g74857",
+   "text": "Library or Bookstore Date"
   }
  ],
  "letters": [
@@ -50,19 +54,19 @@
  "days": [
   {
    "slug": "2026-02-14",
-   "date": "2026-02-14",
-   "title": "Our first picnic",
+   "date": "2026-07-12",
+   "title": "Nuwakot Fieldtrip",
    "badge": "sunflower",
    "mood": "Happy",
-   "weather": "Sunny",
-   "place": "The park",
+   "weather": "Rainy",
+   "place": "Lauke Jharana - Nuwakot",
    "sections": [
     {
      "id": "s1",
      "type": "note",
      "title": "",
      "data": {
-      "text": "Write a little diary entry about this day here. What you did, what made you laugh, what you want to remember."
+      "text": "Yo smriti bhanne aadu paadu ka bata bhetna aayexa, ani nuwakot jane bhanda hus pani bhanexa 😮, aba testai ho, paxi ramrari lekhna man lage lekhumla"
      }
     },
     {
@@ -72,7 +76,7 @@
      "data": {
       "items": [
        {
-        "src": "",
+        "src": "media/mv56zvppuohfo.jpg",
         "kind": "image",
         "caption": "Add a caption"
        },
@@ -96,14 +100,14 @@
      "data": {
       "rows": [
        {
-        "dish": "Sandwiches",
-        "where": "Made at home",
-        "rating": 5
+        "dish": "Cappuccino",
+        "where": "Dhalan Ghar",
+        "rating": 4
        },
        {
-        "dish": "Lemonade",
-        "where": "The corner shop",
-        "rating": 4
+        "dish": "Mustang Aalu",
+        "where": "Dhalan Ghar",
+        "rating": 2
        }
       ]
      }
@@ -115,12 +119,41 @@
      "data": {
       "rows": [
        {
-        "item": "Snacks",
-        "amount": 8
+        "item": "Black Tea",
+        "amount": 50
        },
        {
-        "item": "Blanket",
-        "amount": 12
+        "item": "Cappuccino & Mustang Aalu",
+        "amount": 750
+       }
+      ]
+     }
+    },
+    {
+     "id": "mv57387v4iwvy",
+     "type": "polaroids",
+     "title": "",
+     "data": {
+      "items": [
+       {
+        "src": "media/mv573gs738g15.jpg",
+        "kind": "image",
+        "caption": ""
+       }
+      ]
+     }
+    },
+    {
+     "id": "mv573vmatbhu9",
+     "type": "places",
+     "title": "",
+     "data": {
+      "rows": [
+       {
+        "name": "Nuwakot",
+        "note": "Lauke Jharana",
+        "lat": 27.925799,
+        "lng": 85.248672
        }
       ]
      }
@@ -227,5 +260,5 @@
   "a": {},
   "b": {}
  },
- "publishedAt": "2026-10-12T11:49:43.288Z"
+ "publishedAt": "2026-10-12T11:57:34.506Z"
 }
