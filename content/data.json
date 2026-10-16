@@ -8,7 +8,7 @@
  ],
  "since": "2026-08-01",
  "currency": "$",
- "theme": "scrapbook",
+ "theme": "editorial",
  "stickers": [
   "sunflower",
   "lily",
@@ -76,19 +76,209 @@
      "data": {
       "items": [
        {
-        "src": "media/mv56zvppuohfo.jpg",
+        "src": "media/mvb4zxoy4aopg.jpg",
         "kind": "image",
-        "caption": "Add a caption"
+        "caption": ""
        },
        {
-        "src": "",
-        "kind": "image",
-        "caption": "Another memory"
+        "src": "media/mvb4zxpc55crd.mp4",
+        "kind": "video",
+        "caption": ""
        },
        {
-        "src": "",
+        "src": "media/mvb4zxq7tk1pb.mp4",
+        "kind": "video",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb4zxquct7ze.mp4",
+        "kind": "video",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb503cgcddf8.jpg",
         "kind": "image",
-        "caption": "One more"
+        "caption": ""
+       },
+       {
+        "src": "media/mvb504i5nagby.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb505ly9bwo8.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb506mkeaffp.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb506muc9qwh.mp4",
+        "kind": "video",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb506nhpkl6k.mp4",
+        "kind": "video",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb507pn8ppfm.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb508qnxhqb1.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb509tycw5cb.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50ax4r390i.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50axkgputt.mp4",
+        "kind": "video",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50c1uv1hh4.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50dbnbxg62.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50dqgous95.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50dymit3lv.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50e7mpjkcc.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50edxz3bgy.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50en09ggv9.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50f1qoajxz.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50fc1fv5xt.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50fmenh1im.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50fv9c34c7.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50g4u1hmu6.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50ghqtic7e.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50grbqbwsw.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50gzlp1xwq.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50gzug6tmg.mp4",
+        "kind": "video",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50h0nxcx2f.mp4",
+        "kind": "video",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50h81nk1vk.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50hhbt0l9i.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50hqhkbf0d.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50hqst8knl.mp4",
+        "kind": "video",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50hrbq97mo.mp4",
+        "kind": "video",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50i5uinhuk.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50i63lwijh.mp4",
+        "kind": "video",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50i737emmc.mp4",
+        "kind": "video",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb50i7lon338.mp4",
+        "kind": "video",
+        "caption": ""
        }
       ]
      }
@@ -134,13 +324,7 @@
      "type": "polaroids",
      "title": "",
      "data": {
-      "items": [
-       {
-        "src": "media/mv573gs738g15.jpg",
-        "kind": "image",
-        "caption": ""
-       }
-      ]
+      "items": []
      }
     },
     {
@@ -260,5 +444,5 @@
   "a": {},
   "b": {}
  },
- "publishedAt": "2026-10-12T11:57:34.506Z"
+ "publishedAt": "2026-10-16T15:43:58.372Z"
 }
