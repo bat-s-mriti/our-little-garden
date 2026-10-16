@@ -324,7 +324,23 @@
      "type": "polaroids",
      "title": "",
      "data": {
-      "items": []
+      "items": [
+       {
+        "src": "media/mvb560dqsiwqz.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb5611n601vs.jpg",
+        "kind": "image",
+        "caption": ""
+       },
+       {
+        "src": "media/mvb561ep19oci.jpg",
+        "kind": "image",
+        "caption": ""
+       }
+      ]
      }
     },
     {
@@ -444,5 +460,5 @@
   "a": {},
   "b": {}
  },
- "publishedAt": "2026-10-16T15:43:58.372Z"
+ "publishedAt": "2026-10-16T15:47:53.240Z"
 }
