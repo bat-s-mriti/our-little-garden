@@ -1,19 +1,47 @@
-# Our Little Garden (v2)
+# Our Little Garden
 
-## Run it
-Needs a host at a domain root (clean URLs like /day/2026-02-14) with a "send everything to index.html" fallback.
-- Netlify / Cloudflare Pages: `_redirects` is included.
-- GitHub Pages: `404.html` is included (a copy of index.html).
-- Locally: `python3 serve.py` then open http://localhost:8000  (double-clicking index.html no longer works).
+A cottagecore memory site for two: a gallery, one page per day, and little extras (map, calendar, stats, bucket list, date jar, letters). Plain files, no build step.
 
-If you are replacing the old v1 site, delete its old files (day.html, script.js, etc.) first. Your v1 data stays in your browser and is migrated automatically.
+## How it is hosted
+- The site files live in a private GitHub repo.
+- Netlify is linked to that repo and redeploys automatically whenever the repo changes.
+- The site needs the root of a domain (clean URLs like `/day/2026-02-14`) and a "send everything to index.html" fallback. `_redirects` (Netlify) and `404.html` (GitHub Pages) are included.
 
-## Edit
-Open the site with `?edit` (e.g. https://yoursite/?edit). Edit mode sticks until you open `?edit=off`.
-Everything is saved in this browser. Toolbar: Settings (names, theme, currency, our song), Stickers, Export, Import, Reset.
+## Editing
+Open the site with `?edit` (for example `https://your-site/?edit`). Edit mode sticks until you open `?edit=off`.
+- **Everything you change is saved in this browser only** until you publish.
+- Toolbar: Settings (title, names, date, currency, our song), Stickers, Publish, ⚙︎ (publish settings), Export, Import, Reset, Done.
+- Each day is built from optional, reorderable sections: note, photos and videos, polaroids, places and map, food, spending, outfit, song, movies, quotes, love notes, highlight, bucket ticks, scorecard, tickets, voice notes.
+- Photos and videos can be added in bulk or dropped onto a section. Videos autoplay one at a time.
+- The Stickers page controls the flowers and emoji used around the site and in the background.
 
-## Let her see your edits
-Export downloads a zip. Unzip it and upload the `content` folder into the site's root (replace the old one). Visitors always see what's in `content`. The same zip is your backup; Import restores it.
+## Publishing (one click)
+Press **Publish** in edit mode. It saves your data, photos, videos and songs into the repo's `content` folder; Netlify then updates the live site about a minute later, so everyone sees it.
+
+One-time setup (⚙︎ next to Publish):
+1. Repository: `owner/name` of the GitHub repo. Branch: usually `main`. Site folder: empty unless the site is inside a subfolder.
+2. Access token: GitHub → Settings → Developer settings → Fine-grained tokens, limited to this repository only, with **Contents: Read and write**. Give it an expiry.
+
+The token stays in that one browser and is never put in the site data or in exports. Only set it up on your own devices. If two devices publish, the last one wins. Videos over 50 MB are too big to publish this way.
+
+## Backup
+**Export** downloads a zip with `content/data.json` and `content/media/*`. **Import** restores it into a browser (it also accepts the old v1 `.json` backup). Export before big changes.
+
+## Look
+One cottagecore look with a day and night mode (sun/moon button, top right). The homepage links are objects in a little room: calendar and map on the wall, window, wreath and picture frame, jar and bucket on the tables, and a surprise egg. On small screens the room becomes a panel under the title.
+
+## Updating the site files
+Upload changed files to the repo (GitHub: Add file → Upload files; folders keep their structure). Do not touch the `content` folder, which holds what you published. After a deploy, hard refresh (Ctrl+Shift+R).
 
 ## Files
-- data.js: starter content only.  content/: your published data + media.  js/ css/: the site itself.
+- `index.html`, `404.html`: the page shell (identical).
+- `css/style.css`, `css/cottage.css`, `css/edit.css`: styles; `edit.css` only loads in edit mode.
+- `js/`: the site's code (`core`, `ui`, `pages`, `sections`, `app`, `publish`, `zip`, `music`, `tinymap`, `avatar`, `toys`, `icons`).
+- `data.js`: starter content shown until something is published.
+- `content/`: your published data and media.
+- `_redirects`: Netlify fallback. `serve.py`: local preview (`python3 serve.py`, then open http://localhost:8000).
+
+## Notes
+- Music needs one tap on the first visit (browsers block autoplay). YouTube and Spotify links show as an embed instead of playing in the background.
+- The map and place search need internet.
+- Opening `index.html` by double-clicking does not work; use the hosted site or `serve.py`.
