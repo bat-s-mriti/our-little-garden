@@ -99,14 +99,12 @@ function mountToolbar() {
 }
 
 function openSettings() {
-  const themes = [["scrapbook", "Soft scrapbook", "Paper, tape and polaroids"], ["cottage", "Pastel cottage", "Sage, blush and butter"], ["editorial", "Quiet editorial", "Clean, with doodles"]];
   const m = STATE.music;
   const dlg = modal("Site settings", `
     <label>Site title<input name="title" value="${esc(STATE.title)}"></label>
     <label>Subtitle<input name="subtitle" value="${esc(STATE.subtitle)}"></label>
     <div class="two"><label>Your name<input name="n0" value="${esc(STATE.names[0])}"></label><label>Her name<input name="n1" value="${esc(STATE.names[1])}"></label></div>
     <div class="two"><label>Together since<input type="date" name="since" value="${esc(STATE.since)}"></label><label>Currency symbol<input name="currency" value="${esc(STATE.currency)}" maxlength="4"></label></div>
-    <fieldset class="themes"><legend>Look</legend>${themes.map(([v, t, d]) => `<label class="themeopt"><input type="radio" name="theme" value="${v}" ${STATE.theme === v ? "checked" : ""}><span><b>${t}</b><small>${d}</small></span></label>`).join("")}</fieldset>
     <fieldset class="themes"><legend>Our song (plays on the homepage and pages without their own song)</legend>
       <label>Title<input name="mtitle" value="${esc(m.title)}" placeholder="Song title"></label>
       <div class="songrow"><span id="mstatus">${m.src ? "✓ song file added" : "No song file yet"}</span><button type="button" class="ghostb" id="mup">${m.src ? "Replace file" : "Upload song file"}</button>${m.src ? `<button type="button" class="ghostb" id="mrm">Remove</button>` : ""}</div></fieldset>`,
@@ -116,9 +114,7 @@ function openSettings() {
     STATE.names = [fd.get("n0").trim(), fd.get("n1").trim()];
     STATE.since = fd.get("since") || "";
     STATE.currency = fd.get("currency");
-    STATE.theme = fd.get("theme");
     STATE.music.title = fd.get("mtitle").trim();
-    document.documentElement.dataset.theme = STATE.theme;
     saveState();
     await resolveMedia(STATE.music);
     render();
@@ -144,7 +140,7 @@ function openSettings() {
 async function boot() {
   initEditFlag();
   STATE = await loadState();
-  document.documentElement.dataset.theme = STATE.theme;
+  initMode();
   await resolveMedia(STATE.music);
   await preloadStickers();
   initBackground();

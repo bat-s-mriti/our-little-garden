@@ -8,8 +8,8 @@ window.SITE = {
   names: ["Me", "My Love"],
   since: "2026-01-01",
   currency: "$",
-  theme: "scrapbook",
-  stickers: ["sunflower", "lily", "mushroom"],
+  stickers: ["sunflower", "lily", "mushroom", "daisy", "tulip", "strawberry", "butterfly", "cherry", "bee"],
+  stkv: 2,
   bucket: [
     { id: "b1", text: "Watch a sunrise together", done: false, doneDate: "" },
     { id: "b2", text: "Cook a brand new recipe", done: false, doneDate: "" }

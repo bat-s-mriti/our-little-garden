@@ -18,7 +18,8 @@ function runLeave() { while (LEAVE.length) { try { LEAVE.pop()(); } catch (e) { 
 const SCHEMA = 2;
 const KEY = "garden.v1";          // same key as the first version, so existing data carries over
 const EDIT_KEY = "garden.edit";
-const BUILTIN_STICKERS = ["sunflower", "lily", "mushroom", "heart"];
+const BUILTIN_STICKERS = ["sunflower", "lily", "mushroom", "heart", "daisy", "tulip", "strawberry", "butterfly", "cherry", "bee"];
+const NEW_STICKERS = ["daisy", "tulip", "strawberry", "butterfly", "cherry", "bee"];
 let STATE = null;
 let EDIT = false;
 let dirty = false;
@@ -28,8 +29,8 @@ const replacer = (k, v) => (k.startsWith("_") ? undefined : v);   // runtime-onl
 function blankState() {
   return {
     schema: SCHEMA, title: "Our Little Garden", subtitle: "", since: "", names: ["", ""],
-    currency: "$", theme: "scrapbook",
-    stickers: ["sunflower", "lily", "mushroom"],
+    currency: "$",
+    stickers: ["sunflower", "lily", "mushroom", ...NEW_STICKERS], stkv: 2,
     music: { title: "", url: "", src: "", kind: "" },
     days: [], bucket: [], jar: [], letters: [],
     favorites: { songs: [], foods: [], films: [], places: [] },
@@ -53,6 +54,8 @@ function migrate(s) {
 }
 
 function normalize(s) {
+  // one-time: older sites get the new drawn stickers added (they can still be removed on the Stickers page)
+  if (!s.stkv && Array.isArray(s.stickers)) { NEW_STICKERS.forEach(id => { if (!s.stickers.includes(id)) s.stickers.push(id); }); s.stkv = 2; }
   const b = blankState();
   for (const k in b) if (s[k] === undefined || s[k] === null) s[k] = b[k];
   s.names = Array.isArray(s.names) ? s.names.slice(0, 2) : ["", ""];
@@ -61,8 +64,8 @@ function normalize(s) {
   s.about = Object.assign(blankState().about, s.about || {});
   s.about.a = s.about.a || {}; s.about.b = s.about.b || {};
   s.music = Object.assign(blankState().music, s.music || {});
-  if (!["scrapbook", "cottage", "editorial"].includes(s.theme)) s.theme = "scrapbook";
-  if (!Array.isArray(s.stickers) || !s.stickers.length) s.stickers = ["sunflower", "lily", "mushroom"];
+  delete s.theme;   // one look only now: cottagecore, with a day and a night mode
+  if (!Array.isArray(s.stickers) || !s.stickers.length) s.stickers = ["sunflower", "lily", "mushroom", ...NEW_STICKERS];
   ["days", "bucket", "jar", "letters"].forEach(k => { if (!Array.isArray(s[k])) s[k] = []; });
   s.days.forEach(d => {
     d.slug = d.slug || uid();
@@ -261,6 +264,17 @@ async function dropMedia(o) {
 /* ---------- Stickers ---------- */
 function stickerList() { return STATE.stickers.length ? STATE.stickers : ["heart"]; }
 const randSticker = () => pick(stickerList());
+/* n stickers that are all different (cycling through a shuffled pool if you ask for more than you own), never the same twice in a row */
+function stickerDeck(n) {
+  const pool = stickerList().slice(), out = [];
+  let last = null;
+  while (out.length < n) {
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    if (pool.length > 1 && pool[0] === last) pool.push(pool.shift());
+    for (const id of pool) { if (out.length < n) { out.push(id); last = id; } }
+  }
+  return out;
+}
 
 function stickerURL(id) {
   const rest = id.slice(4);
