@@ -46,7 +46,16 @@ function done(html, after) {
 }
 
 /* ---------- Home ---------- */
-const TILES = [["/timeline", "snail", "Timeline"], ["/map", "map", "Our map"], ["/calendar", "calendar", "Calendar"], ["/stats", "bee", "Our stats"], ["/random", "egg", "Surprise me!"], ["/favorites", "heart", "Favorites"], ["/bucket-list", "balloon", "Bucket list"], ["/date-jar", "jar", "Date jar"], ["/letters", "letter", "Open when…"], ["/about-us", "us", "About us"]];
+const HOOK = `<svg class="hook" viewBox="0 0 100 26" aria-hidden="true"><circle cx="50" cy="4" r="3.6" fill="#8a6a4a"/><path d="M50 5 L16 26 M50 5 L84 26" stroke="#b08a5a" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>`;
+// [path, toy, label, classes]: things on the walls first, then things on the tables
+const ROOM = [
+  ["/calendar", "calendar", "Calendar", "cal hang"], ["/map", "map", "Our map", "map hang"], ["/stats", "bee", "Our stats", "bee"],
+  ["/timeline", "window", "Timeline", "win"], ["/favorites", "wreath", "Favorites", "wre hang"], ["/about-us", "frame", "About us", "frm hang"],
+  ["/date-jar", "jar", "Date jar", "jar t"], ["/bucket-list", "pail", "Bucket list", "pail t"], ["/letters", "letter", "Open when…", "let t"], ["/random", "eggnest", "Surprise me!", "egg t"]
+];
+const roomHTML = () => `<nav class="room" aria-label="Pages"><i class="wallp l"></i><i class="wallp r"></i>${ROOM.map(([p, t, label, cls], i) =>
+  `<a class="it ${cls}" style="--i:${i}" href="${L(p)}" aria-label="${label}"${t === "eggnest" ? " data-egg" : ""}>${cls.includes("hang") ? HOOK : ""}<span class="toy">${toySVG(t)}</span><span class="tag">${label}</span></a>`
+  + (i === 7 ? `<i class="plank l"></i>` : i === ROOM.length - 1 ? `<i class="plank r"></i>` : "")).join("")}</nav>`;
 
 function nextAnniv() {
   if (!STATE.since) return null;
@@ -86,8 +95,8 @@ async function pageHome() {
       ${dt >= 0 ? `<span class="counter">${dt.toLocaleString()} day${dt === 1 ? "" : "s"} together</span>` : ""}
       ${an && an.years > 0 ? `<div class="anniv">🎂 ${an.days === 0 ? "Happy anniversary!" : `${an.days} day${an.days === 1 ? "" : "s"} to our ${ordinal(an.years)} anniversary`}<small> · monthsary ${an.mdays === 0 ? "is today" : `in ${an.mdays} day${an.mdays === 1 ? "" : "s"}`}</small></div>` : ""}
     </header>
-    <main class="wrap">
-      <section class="tiles stagger reveal">${TILES.map(([p, t, label]) => `<a class="tile toy-${t}" href="${L(p)}"${t === "egg" ? " data-egg" : ""}><span class="toy">${toySVG(t)}</span><span class="tl">${label}</span></a>`).join("")}</section>
+    ${roomHTML()}
+    <main class="wrap home">
       ${mem ? `<a class="memory reveal" href="${L("/day/" + encodeURIComponent(mem[0].slug))}"><img src="${esc(mem[1])}" alt=""><div><small>✨ Memory of the day</small><b>${esc(mem[0].title || "A lovely day")}</b><span>${esc(prettyDate(mem[0].date))}</span></div></a>` : ""}
       <h2 class="sech reveal">Our days</h2>
       ${cards.length ? `<section class="grid stagger">${cards.join("")}</section>` : emptyMsg("No days yet. Open the edit link to add the first one.")}

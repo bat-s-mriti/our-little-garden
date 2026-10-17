@@ -156,17 +156,21 @@ function initBackground() {
   if (!bg) return;
   const n = innerWidth < 700 ? 8 : 14;
   let h = "";
+  const ids = stickerDeck(n);
   for (let i = 0; i < n; i++) {
     const size = Math.round(rand(34, 86));
-    h += `<span class="float" style="left:${rand(0, 94).toFixed(1)}%;top:${rand(0, 92).toFixed(1)}%;--d:${rand(6, 12).toFixed(1)}s;--r:${Math.round(rand(-25, 25))}deg;animation-delay:${(-rand(0, 8)).toFixed(1)}s">${stickerHTML(randSticker(), size)}</span>`;
+    h += `<span class="float" style="left:${rand(0, 94).toFixed(1)}%;top:${rand(0, 92).toFixed(1)}%;--d:${rand(6, 12).toFixed(1)}s;--r:${Math.round(rand(-25, 25))}deg;animation-delay:${(-rand(0, 8)).toFixed(1)}s">${stickerHTML(ids[i], size)}</span>`;
   }
+  h += `<span class="ivy l"></span><span class="ivy r"></span>`;
+  for (let i = 0; i < 3; i++) h += `<span class="cloud" style="--y:${Math.round(rand(3, 48))}%;--s:${Math.round(rand(110, 200))}px;--t:${Math.round(rand(90, 150))}s;--dl:${(-rand(0, 120)).toFixed(0)}s">${CLOUD_SVG}</span>`;
+  // daytime butterflies, night-time fireflies
+  for (let i = 0; i < 3; i++) h += `<span class="bf" style="--y:${Math.round(rand(8, 70))}%;--t:${Math.round(rand(26, 44))}s;--dl:${(-rand(0, 30)).toFixed(1)}s;--s:${Math.round(rand(22, 34))}px">${BUTTERFLY_SVG}</span>`;
+  for (let i = 0; i < (innerWidth < 700 ? 9 : 16); i++) h += `<span class="ff" style="left:${rand(2, 98).toFixed(1)}%;top:${rand(6, 96).toFixed(1)}%;--t:${rand(5, 11).toFixed(1)}s;animation-delay:${(-rand(0, 10)).toFixed(1)}s"></span>`;
   bg.innerHTML = h;
 }
 
 function stickerRow(n = 3, size = 40) {
-  let s = "";
-  for (let i = 0; i < n; i++) s += stickerHTML(randSticker(), size);
-  return s;
+  return stickerDeck(n).map(id => stickerHTML(id, size)).join("");
 }
 function placeholder(i, text = "Photo goes here") {
   return `<div class="ph v${(i % 3) + 1}">${stickerHTML(randSticker(), 44)}<span>${esc(text)}</span></div>`;
@@ -174,4 +178,38 @@ function placeholder(i, text = "Photo goes here") {
 function footerHTML() {
   const who = STATE.names.filter(Boolean).map(esc).join(" &amp; ");
   return `<footer class="foot"><div class="row">${stickerRow(5, 30)}</div><div>Made with love${who ? " by " + who : ""}</div></footer>`;
+}
+
+
+/* ---------- Day / night ---------- */
+const MODE_KEY = "garden.mode";
+const CLOUD_SVG = `<svg viewBox="0 0 120 56" aria-hidden="true"><g fill="#fff" stroke="#cfdde0" stroke-width="2"><ellipse cx="30" cy="38" rx="26" ry="14"/><ellipse cx="62" cy="28" rx="26" ry="20"/><ellipse cx="92" cy="38" rx="24" ry="14"/><rect x="30" y="34" width="62" height="18" stroke="none"/></g></svg>`;
+const BUTTERFLY_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true"><g class="bw l"><path d="M20 19 C12 4 2 6 3 16 C4 24 14 25 20 21Z" fill="#cdb7f0" stroke="#8d6fc4" stroke-width="1.2"/></g><g class="bw r"><path d="M20 19 C28 4 38 6 37 16 C36 24 26 25 20 21Z" fill="#cdb7f0" stroke="#8d6fc4" stroke-width="1.2"/></g><path d="M20 22 C14 24 9 28 12 34 C16 37 19 30 20 26Z M20 22 C26 24 31 28 28 34 C24 37 21 30 20 26Z" fill="#f9c6d4" stroke="#d6577f" stroke-width="1.2"/><rect x="19" y="14" width="2.4" height="18" rx="1.2" fill="#5b3a29"/></svg>`;
+const SUN_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true"><g class="rays" stroke="#e0a400" stroke-width="2.6" stroke-linecap="round">${Array.from({ length: 8 }, (_, i) => `<path d="M20 4 V9" transform="rotate(${i * 45} 20 20)"/>`).join("")}</g><circle cx="20" cy="20" r="9" fill="#f7c531" stroke="#e0a400" stroke-width="2"/><circle cx="17" cy="19" r="1.3" fill="#5b3a29"/><circle cx="23" cy="19" r="1.3" fill="#5b3a29"/><path d="M17 23 Q20 26 23 23" fill="none" stroke="#5b3a29" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+const MOON_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M26 6 A15 15 0 1 0 34 26 A12 12 0 0 1 26 6Z" fill="#fde9a6" stroke="#d9b24c" stroke-width="2" stroke-linejoin="round"/><circle cx="17" cy="22" r="1.3" fill="#5b3a29"/><path d="M14 26 Q17 29 20 26" fill="none" stroke="#5b3a29" stroke-width="1.4" stroke-linecap="round"/><path class="twk" d="M31 8 l1.2 3 3 1.2 -3 1.2 -1.2 3 -1.2 -3 -3 -1.2 3 -1.2Z" fill="#fde9a6"/></svg>`;
+
+function applyMode(m, save) {
+  document.documentElement.dataset.mode = m;
+  if (save) { try { localStorage.setItem(MODE_KEY, m); } catch (e) { /* ignore */ } }
+  const b = $("#modeBtn");
+  if (b) {
+    b.innerHTML = m === "night" ? MOON_SVG : SUN_SVG;
+    b.title = m === "night" ? "Night mode (tap for day)" : "Day mode (tap for night)";
+    b.setAttribute("aria-label", b.title);
+  }
+}
+function initMode() {
+  let m = document.documentElement.dataset.mode;
+  if (m !== "day" && m !== "night") m = matchMedia("(prefers-color-scheme: dark)").matches ? "night" : "day";
+  const b = document.createElement("button");
+  b.id = "modeBtn"; b.type = "button";
+  b.onclick = e => {
+    const next = document.documentElement.dataset.mode === "night" ? "day" : "night";
+    b.classList.remove("flip"); void b.offsetWidth; b.classList.add("flip");
+    applyMode(next, true);
+    const r = b.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height / 2, 8);
+  };
+  document.body.appendChild(b);
+  applyMode(m, false);
 }

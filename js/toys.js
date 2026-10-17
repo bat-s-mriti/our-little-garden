@@ -86,6 +86,61 @@ const TOYS = {
       <path class="t-heart2" d="M50 66 C42 60 43 54 47 54 C49 54 50 56 50 56 C50 56 51 54 53 54 C57 54 58 60 50 66Z" fill="#f2698b" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/>
       ${face(50, 76, .55)}
     </g>`,
+
+  pail: () => `
+    <g class="t-pail">
+      <g class="t-slips2">
+        <rect x="30" y="14" width="18" height="24" rx="2.5" fill="#fff4d6" ${ln} transform="rotate(-14 39 26)"/><path d="M34 22 l9 -2 M33 28 l9 -2" stroke="#e58ca8" stroke-width="2" stroke-linecap="round" transform="rotate(-14 39 26)"/>
+        <rect x="50" y="10" width="18" height="24" rx="2.5" fill="#cfeaf5" ${ln} transform="rotate(10 59 22)"/><path d="M54 18 l9 1 M54 24 l9 1" stroke="#7bab6e" stroke-width="2" stroke-linecap="round" transform="rotate(10 59 22)"/>
+        <g transform="translate(20 22)"><circle r="6" fill="#fff" stroke="${INK}" stroke-width="1.8"/><circle r="3" fill="#f7c531"/></g>
+        <path d="M20 28 V46" stroke="#5a8a55" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M78 36 C73 30 74 22 78 20 C82 22 83 30 78 36Z" fill="#f48fa1" ${ln}/><path d="M78 36 V50" stroke="#5a8a55" stroke-width="2.4" stroke-linecap="round"/>
+      </g>
+      <path d="M22 42 C30 30 70 30 78 42" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" opacity=".55"/>
+      <path d="M16 44 H84 L76 90 Q75 94 70 94 H30 Q25 94 24 90Z" fill="#d9a56a" ${ln}/>
+      <path d="M20 58 H80 M22 74 H78" stroke="${INK}" stroke-width="2.4" opacity=".55"/>
+      <path d="M36 46 L38 92 M50 46 V94 M64 46 L62 92" stroke="${INK}" stroke-width="1.4" opacity=".28"/>
+      <ellipse cx="50" cy="44" rx="34" ry="5" fill="#b9854c" ${ln}/>
+      ${face(50, 76, .8)}
+    </g>`,
+  wreath: () => `
+    <g class="t-wreath">
+      ${Array.from({ length: 14 }, (_, i) => { const a = i * 360 / 14; return `<ellipse cx="50" cy="12" rx="6.5" ry="12" fill="${i % 2 ? "#8bbf7f" : "#6fae63"}" stroke="#4a7d44" stroke-width="1.6" transform="rotate(${a} 50 52) rotate(${i % 2 ? 24 : -24} 50 12)"/>`; }).join("")}
+      ${[[50, 10, "#f9c6d4"], [88, 40, "#f7c531"], [74, 86, "#fff"], [24, 84, "#f9c6d4"], [12, 38, "#f7c531"]].map(([x, y, c]) => `<g transform="translate(${x} ${y})">${[0, 72, 144, 216, 288].map(a => `<circle cx="0" cy="-5" r="3.8" fill="${c}" stroke="#a9784b" stroke-width="1.2" transform="rotate(${a})"/>`).join("")}<circle r="2.4" fill="#e0a400"/></g>`).join("")}
+      <path class="t-wh" d="M50 76 C26 58 28 38 40 38 C46 38 50 43 50 46 C50 43 54 38 60 38 C72 38 74 58 50 76Z" fill="#f9a1b8" ${ln}/>
+      ${face(50, 54, .62)}
+    </g>`,
+  eggnest: () => `
+    <g class="t-eggnest">
+      <g transform="translate(14 -6) scale(.74)">${TOYS.egg()}</g>
+      <path d="M8 80 Q8 66 22 66 H78 Q92 66 92 80 Q92 94 50 96 Q8 94 8 80Z" fill="#cf9a5b" ${ln}/>
+      <path d="M14 74 q10 6 20 0 t20 0 t20 0 t12 0 M12 84 q10 6 22 0 t22 0 t22 0" fill="none" stroke="#9a6a36" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M20 68 l-6 -8 M30 66 l-3 -9 M70 66 l3 -9 M80 68 l6 -8" stroke="#e5be6f" stroke-width="2.4" stroke-linecap="round"/>
+    </g>`,
+  window: () => `
+    <g class="t-window">
+      <defs><clipPath id="wclip"><rect x="16" y="14" width="68" height="62" rx="4"/></clipPath></defs>
+      <rect x="16" y="14" width="68" height="62" rx="4" style="fill:var(--sky2)"/>
+      <g clip-path="url(#wclip)">
+        <rect x="16" y="14" width="68" height="34" style="fill:var(--sky1)"/>
+        <g class="w-day"><circle cx="72" cy="28" r="7" fill="#f7c531"/><g class="w-cloud"><ellipse cx="34" cy="30" rx="11" ry="5" fill="#fff"/><ellipse cx="42" cy="27" rx="7" ry="5" fill="#fff"/></g></g>
+        <g class="w-night"><path d="M70 20 A8 8 0 1 0 77 33 A6.5 6.5 0 0 1 70 20Z" fill="#fde9a6"/>${[[30, 24], [44, 34], [56, 22], [38, 42]].map(([x, y]) => `<circle class="w-star" cx="${x}" cy="${y}" r="1.3" fill="#fff"/>`).join("")}</g>
+        <path d="M16 70 Q34 56 52 66 T84 62 V78 H16Z" fill="#8bbf7f"/><path d="M16 74 Q40 64 60 72 T84 70 V78 H16Z" fill="#6fae63"/>
+        <g transform="translate(34 12) scale(.4)"><g class="t-balloon">
+          <path d="M50 8 C72 8 82 26 80 42 C78 58 62 66 50 70 C38 66 22 58 20 42 C18 26 28 8 50 8Z" fill="#ff9a8a" ${ln}/>
+          <path d="M50 8 C40 18 38 54 50 70 C62 54 60 18 50 8Z" fill="#ffd27a" opacity=".9"/>
+          <path d="M48 70 L40 86 M52 70 L60 86" stroke="${INK}" stroke-width="2.4" fill="none"/>
+          <rect x="36" y="86" width="28" height="12" rx="3" fill="#c68a4b" ${ln}/>
+        </g></g>
+      </g>
+      <path d="M50 14 V76 M16 45 H84" stroke="#fff6e0" stroke-width="3.4"/>
+      <rect x="16" y="14" width="68" height="62" rx="4" fill="none" stroke="#c68a4b" stroke-width="5"/>
+      <rect x="16" y="14" width="68" height="62" rx="4" fill="none" stroke="${INK}" stroke-width="1.6" opacity=".5"/>
+      <path d="M10 14 H34 Q26 38 28 62 H10Z" fill="#f4c7cf" stroke="${INK}" stroke-width="2" stroke-linejoin="round" opacity=".95"/>
+      <path d="M90 14 H66 Q74 38 72 62 H90Z" fill="#f4c7cf" stroke="${INK}" stroke-width="2" stroke-linejoin="round" opacity=".95"/>
+      <rect x="8" y="76" width="84" height="7" rx="3" fill="#d9a56a" ${ln}/>
+      <g transform="translate(28 74)"><path d="M-6 0 L-4 -9 H4 L6 0Z" fill="#e58c6a" ${ln}/><circle cx="0" cy="-13" r="4.4" fill="#f9c6d4" stroke="${INK}" stroke-width="1.6"/><circle cx="0" cy="-13" r="1.7" fill="#f7c531"/></g>
+    </g>`,
   us: () => `
     <g class="t-us">
       <g transform="translate(-1 14) scale(.5)"><g class="t-a">${avatarInner(Object.assign({}, AV_DEFAULT.a, STATE.about.a))}</g></g>
@@ -93,6 +148,14 @@ const TOYS = {
       <path class="t-lh" d="M50 24 C44 19 45 13 48 13 C49.5 13 50 15 50 15 C50 15 50.5 13 52 13 C55 13 56 19 50 24Z" fill="#f2698b" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/>
     </g>`
 };
+
+TOYS.frame = () => `
+    <g class="t-frame">
+      <rect x="7" y="7" width="86" height="86" rx="9" fill="#d9a56a" ${ln}/>
+      <rect x="14" y="14" width="72" height="72" rx="5" fill="#fff4d6" stroke="${INK}" stroke-width="1.8"/>
+      <g transform="translate(17 19) scale(.66)">${TOYS.us()}</g>
+      <g transform="translate(86 16)">${[0, 72, 144, 216, 288].map(a => `<circle cx="0" cy="-5" r="3.6" fill="#f9c6d4" stroke="#a9784b" stroke-width="1" transform="rotate(${a})"/>`).join("")}<circle r="2.8" fill="#f7c531" stroke="#a9784b" stroke-width="1"/></g>
+    </g>`;
 
 function toySVG(name) {
   return `<svg viewBox="0 0 100 100" class="toy-svg" aria-hidden="true">${TOYS[name]()}</svg>`;
