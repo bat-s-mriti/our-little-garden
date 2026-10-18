@@ -95,8 +95,24 @@ function download(blob, name) {
 }
 
 /* Bundle: the data (with media refs rewritten to media/<file>) plus the media blobs. Used by Export and Publish. */
-async function buildBundle() {
+/* What visitors get: anything you marked 🔒 is blanked out. Export (your backup) keeps everything. */
+function publicState(st) {
+  const ab = st.about;
+  let addrHidden = false;
+  ["a", "b"].forEach(w => {
+    const p = ab.p && ab.p[w];
+    if (!p) return;
+    const hide = new Set(p.hide || []);
+    ["full", "nick", "birth", "phone", "email"].forEach(k => { if (hide.has(k)) p[k] = ""; });
+    if (hide.has("addr")) { p.addr = ""; p.lat = ""; p.lng = ""; addrHidden = true; }
+    p.extra = (p.extra || []).filter(r => !r.priv);
+  });
+  if (addrHidden) ab.route = null;
+}
+
+async function buildBundle(opts = {}) {
   const st = JSON.parse(JSON.stringify(STATE, replacer));
+  if (opts.publish) publicState(st);
   const media = [], seen = new Map();
   const pack = async src => {
     if (!src.startsWith("idb:")) return src;
@@ -131,12 +147,12 @@ async function exportContent() {
   const { st, media } = await buildBundle();
   const entries = media.map(m => ({ name: "content/" + m.name, blob: m.blob }));
   entries.unshift({ name: "content/data.json", blob: new Blob([JSON.stringify(st, null, 1)], { type: "application/json" }) });
-  entries.push({ name: "README.txt", blob: new Blob(["Upload the 'content' folder next to index.html on your host (replace the old one) and everyone who opens the site will see this version.\nTo restore it into a browser: open the site with ?edit and use Import.\n"], { type: "text/plain" }) });
+  entries.push({ name: "README.txt", blob: new Blob(["This is a full backup. It includes the details you marked private (phone, email, address), so do not put it on a public site.\nTo show your changes to everyone, use Publish in edit mode.\nTo restore it into a browser: open the site with ?edit and use Import.\n"], { type: "text/plain" }) });
   const total = entries.reduce((n, e) => n + e.blob.size, 0);
   if (total > 3.8e9) { toast("That's over 3.8 GB, too big for one zip. Remove a few videos and try again."); return; }
   const zip = await makeZip(entries, (i, n) => toast(`Packing ${i} of ${n}…`, true));
   download(zip, `our-little-garden-${todayISO()}.zip`);
-  toast(`Exported ${entries.length - 2} files. Upload the "content" folder to your host to publish.`);
+  toast(`Backup saved (${entries.length - 2} files). It includes your private details, so keep it to yourself.`);
 }
 
 /* Import: our zip, or the .json backup from the first version */

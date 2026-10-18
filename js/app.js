@@ -8,7 +8,6 @@ const ROUTES = [
   [/^\/map$/, pageMap],
   [/^\/calendar(?:\/(\d{4})-(\d{2}))?$/, pageCalendar],
   [/^\/stats$/, pageStats],
-  [/^\/favorites$/, pageFavorites],
   [/^\/bucket-list$/, pageBucket],
   [/^\/date-jar$/, pageJar],
   [/^\/letters$/, pageLetters],
@@ -26,7 +25,11 @@ async function doRender() {
   runLeave();
   closeLightbox();
   initEditFlag();
-  const path = (location.pathname.replace(/\/+$/, "") || "/");
+  let path = (location.pathname.replace(/\/+$/, "") || "/");
+  // old links: favorites now live in About us; the stickers page only exists while editing
+  const ALIAS = { "/favorites": "/about-us" };
+  if (ALIAS[path]) { path = ALIAS[path]; history.replaceState({}, "", EDIT ? path + "?edit" : path); }
+  if (path === "/stickers" && !EDIT) { path = "/"; history.replaceState({}, "", "/"); }
   let handler = pageNotFound, m = null;
   for (const [re, fn] of ROUTES) { const r = path.match(re); if (r) { handler = fn; m = r; break; } }
   const el = app();

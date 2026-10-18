@@ -50,12 +50,12 @@ const HOOK = `<svg class="hook" viewBox="0 0 100 26" aria-hidden="true"><circle 
 // [path, toy, label, classes]: things on the walls first, then things on the tables
 const ROOM = [
   ["/calendar", "calendar", "Calendar", "cal hang"], ["/map", "map", "Our map", "map hang"], ["/stats", "bee", "Our stats", "bee"],
-  ["/timeline", "window", "Timeline", "win"], ["/favorites", "wreath", "Favorites", "wre hang"], ["/about-us", "frame", "About us", "frm hang"],
+  ["/timeline", "window", "Timeline", "win"], ["/about-us", "frame", "About us", "frm hang"],
   ["/date-jar", "jar", "Date jar", "jar t"], ["/bucket-list", "pail", "Bucket list", "pail t"], ["/letters", "letter", "Open when…", "let t"], ["/random", "eggnest", "Surprise me!", "egg t"]
 ];
 const roomHTML = () => `<nav class="room" aria-label="Pages"><i class="wallp l"></i><i class="wallp r"></i>${ROOM.map(([p, t, label, cls], i) =>
   `<a class="it ${cls}" style="--i:${i}" href="${L(p)}" aria-label="${label}"${t === "eggnest" ? " data-egg" : ""}>${cls.includes("hang") ? HOOK : ""}<span class="toy">${toySVG(t)}</span><span class="tag">${label}</span></a>`
-  + (i === 7 ? `<i class="plank l"></i>` : i === ROOM.length - 1 ? `<i class="plank r"></i>` : "")).join("")}</nav>`;
+  + (cls.includes("pail") ? `<i class="plank l"></i>` : i === ROOM.length - 1 ? `<i class="plank r"></i>` : "")).join("")}</nav>`;
 
 function nextAnniv() {
   if (!STATE.since) return null;
@@ -202,30 +202,39 @@ async function pageTimeline() {
 }
 
 /* ---------- Map of every place ---------- */
+function homePins() {
+  return ["a", "b"].map(w => ({ w, p: STATE.about.p[w] })).filter(h => hasPin(h.p) && canSee(h.p, "addr"));
+}
 async function pageMap() {
   document.title = "Our map · " + STATE.title;
-  const pts = [];
+  const pts = [], homes = homePins();
   sortedDays().forEach(d => d.sections.forEach(s => { if (s.type === "places") s.data.rows.filter(hasGeo).forEach(r => pts.push({ r, d })); }));
-  done(`<main class="wrap">${crumb()}${pageTitle("Our map", pts.length ? `${pts.length} place${pts.length === 1 ? "" : "s"} we've been to together.` : "")}
-    ${pts.length ? `<div class="bigmap" id="bigmap"></div>
-      <div class="maplist">${[...new Set(pts.map(p => p.d))].map(d => `<div class="ml-day"><a href="${L("/day/" + encodeURIComponent(d.slug))}">${stickerHTML(d.badge, 22)} ${esc(d.title)} <small>${esc(prettyDate(d.date, true))}</small></a>
+  const sub = [pts.length ? `${pts.length} place${pts.length === 1 ? "" : "s"} we've been to together` : "", homes.length ? `${homes.length === 2 ? "both our homes" : "a home"} pinned` : ""].filter(Boolean).join(" · ");
+  done(`<main class="wrap">${crumb()}${pageTitle("Our map", sub ? sub + "." : "")}
+    ${pts.length || homes.length ? `<div class="bigmap" id="bigmap"></div>
+      <div class="maplist">${homes.length ? `<div class="ml-day"><a href="${L("/about-us")}">${stickerHTML("e:🏡", 22)} Our homes</a>
+        <ul>${homes.map((h, i) => `<li><button type="button" data-flyh="${i}">🏡 ${esc(names()[h.w === "a" ? 0 : 1])}${h.p.addr ? " · " + esc(h.p.addr) : ""}</button></li>`).join("")}</ul></div>` : ""}
+      ${[...new Set(pts.map(p => p.d))].map(d => `<div class="ml-day"><a href="${L("/day/" + encodeURIComponent(d.slug))}">${stickerHTML(d.badge, 22)} ${esc(d.title)} <small>${esc(prettyDate(d.date, true))}</small></a>
         <ul>${pts.filter(p => p.d === d).map(p => `<li><button type="button" data-fly="${pts.indexOf(p)}">📍 ${esc(p.r.name || "Somewhere lovely")}</button></li>`).join("")}</ul></div>`).join("")}</div>`
-      : emptyMsg("No places yet. Add a “Places &amp; map” section to a day and pin where you went.")}
+      : emptyMsg("No places yet. Add a “Places &amp; map” section to a day and pin where you went, or pin your homes in About us.")}
     </main>${footerHTML()}`, () => {
-    if (!pts.length) return;
+    if (!pts.length && !homes.length) return;
     const m = new TinyMap($("#bigmap"), { wheel: true });
     pts.forEach(p => m.addMarker(+p.r.lat, +p.r.lng, `<div class="pin">${stickerHTML(p.d.badge, 26)}</div>`, { title: `${p.r.name || ""} (${p.d.title})`, onClick: () => go("/day/" + encodeURIComponent(p.d.slug)) }));
-    m.fitBounds(pts.map(p => [+p.r.lat, +p.r.lng]), 50);
+    homes.forEach(h => m.addMarker(+h.p.lat, +h.p.lng, `<div class="pin">${stickerHTML("e:🏡", 30)}</div>`, { title: `${names()[h.w === "a" ? 0 : 1]}'s home`, onClick: () => go("/about-us") }));
+    if (homes.length === 2) m.setLine(homes.map(h => [+h.p.lat, +h.p.lng]));
+    m.fitBounds([...pts.map(p => [+p.r.lat, +p.r.lng]), ...homes.map(h => [+h.p.lat, +h.p.lng])], 50);
     onLeave(() => m.destroy());
     $(".maplist").addEventListener("click", e => {
-      const b = e.target.closest("[data-fly]");
+      const b = e.target.closest("[data-fly],[data-flyh]");
       if (!b) return;
-      const p = pts[+b.dataset.fly];
-      m.setView(+p.r.lat, +p.r.lng, 13);
+      const q = b.dataset.flyh !== undefined ? homes[+b.dataset.flyh].p : pts[+b.dataset.fly].r;
+      m.setView(+q.lat, +q.lng, 13);
       $("#bigmap").scrollIntoView({ block: "center", behavior: "smooth" });
     });
   });
 }
+
 
 /* ---------- Calendar ---------- */
 async function pageCalendar(m) {
@@ -275,32 +284,6 @@ async function pageStats() {
     ${STATE.bucket.length ? `<p class="statnote">Bucket list: ${bdone} of ${STATE.bucket.length} done</p>` : ""}</main>${footerHTML()}`, () => {
     $$("[data-n]").forEach(el => countUp(el, +el.dataset.n, el.hasAttribute("data-money") ? money : undefined));
   });
-}
-
-/* ---------- Favorites ---------- */
-const FAV = [["songs", "🎵", "Our songs"], ["foods", "🍜", "Our foods"], ["films", "🎬", "Our films & shows"], ["places", "📍", "Our places"]];
-async function pageFavorites() {
-  document.title = "Favorites · " + STATE.title;
-  const paint = () => {
-    done(`<main class="wrap">${crumb()}${pageTitle("Our favorites")}
-      <section class="favgrid stagger">${FAV.map(([k, e, label]) => `<div class="favcard reveal"><h3><span>${e}</span>${label}</h3>
-        <ul>${STATE.favorites[k].map(it => `<li>${esc(it.text)}${EDIT ? `<button type="button" class="x" data-del="${k}:${it.id}">✕</button>` : ""}</li>`).join("") || `<li class="muted">${EDIT ? "Add the first one below" : "Nothing yet"}</li>`}</ul>
-        ${EDIT ? `<form class="addline" data-k="${k}"><input placeholder="Add one…" required><button class="primary">Add</button></form>` : ""}</div>`).join("")}</section></main>${footerHTML()}`, () => {
-      $$(".addline").forEach(f => f.addEventListener("submit", e => {
-        e.preventDefault();
-        const v = $("input", f).value.trim();
-        if (!v) return;
-        STATE.favorites[f.dataset.k].push({ id: uid(), text: v });
-        saveState(); paint();
-      }));
-      $$("[data-del]").forEach(b => b.onclick = () => {
-        const [k, id] = b.dataset.del.split(":");
-        STATE.favorites[k] = STATE.favorites[k].filter(x => x.id !== id);
-        saveState(); paint();
-      });
-    });
-  };
-  paint();
 }
 
 /* ---------- Bucket list ---------- */
@@ -421,12 +404,163 @@ async function pageLetters() {
 }
 
 /* ---------- About us ---------- */
+const FAV = [["songs", "🎵", "Songs"], ["foods", "🍜", "Foods"], ["films", "🎬", "Films & shows"], ["places", "📍", "Places"]];
+const FIELD_LABELS = { full: "Full name", nick: "Also called", birth: "Birthday", addr: "Home", phone: "Phone", email: "Email" };
+const EXTRA_IDEAS = ["Hometown", "Works or studies", "Height", "Blood group", "Languages", "Favourite colour", "Hobbies", "Dream job", "Love language"];
+const ZODIAC = [["Capricorn", "♑", 1, 19], ["Aquarius", "♒", 2, 18], ["Pisces", "♓", 3, 20], ["Aries", "♈", 4, 19], ["Taurus", "♉", 5, 20], ["Gemini", "♊", 6, 20], ["Cancer", "♋", 7, 22], ["Leo", "♌", 8, 22], ["Virgo", "♍", 9, 22], ["Libra", "♎", 10, 22], ["Scorpio", "♏", 11, 21], ["Sagittarius", "♐", 12, 21], ["Capricorn", "♑", 12, 31]];
+
+const dateOnly = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const parseISO = iso => { const d = new Date(iso + "T00:00:00"); return isNaN(d) ? null : d; };
+function addMonthsClamped(b, n) {
+  const y = b.getFullYear() + Math.floor((b.getMonth() + n) / 12), mo = ((b.getMonth() + n) % 12 + 12) % 12;
+  return new Date(y, mo, Math.min(b.getDate(), new Date(y, mo + 1, 0).getDate()));
+}
+/* age as whole years, months and days; { y, m, d, days } or null */
+function ageParts(iso, now = new Date()) {
+  const b = parseISO(iso), t = dateOnly(now);
+  if (!b || b > t) return null;
+  let months = (t.getFullYear() - b.getFullYear()) * 12 + t.getMonth() - b.getMonth();
+  let anchor = addMonthsClamped(b, months);
+  if (anchor > t) { months--; anchor = addMonthsClamped(b, months); }
+  return { y: Math.floor(months / 12), m: months % 12, d: Math.round((t - anchor) / 86400000), days: Math.round((t - b) / 86400000) };
+}
+/* next birthday: { days (0 = today), turning }; 29 Feb falls on 28 Feb in other years */
+function nextBirthday(iso, now = new Date()) {
+  const b = parseISO(iso), t = dateOnly(now);
+  if (!b) return null;
+  const on = y => new Date(y, b.getMonth(), Math.min(b.getDate(), new Date(y, b.getMonth() + 1, 0).getDate()));
+  let n = on(t.getFullYear());
+  if (n < t) n = on(t.getFullYear() + 1);
+  return { days: Math.round((n - t) / 86400000), turning: n.getFullYear() - b.getFullYear() };
+}
+function zodiacOf(iso) {
+  const b = parseISO(iso);
+  if (!b) return null;
+  const m = b.getMonth() + 1, d = b.getDate();
+  return ZODIAC.find(z => m < z[2] || (m === z[2] && d <= z[3])) || ZODIAC[0];
+}
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const ageText = a => a ? [a.y ? plural(a.y, "year") : "", a.m ? plural(a.m, "month") : "", plural(a.d, "day")].filter(Boolean).join(", ") : "";
+
+/* distances */
+const hasPin = p => p && hasGeo({ lat: p.lat, lng: p.lng });
+function haversineKm(a, b) {
+  const R = 6371.0088, r = x => x * Math.PI / 180;
+  const dLa = r(b[0] - a[0]), dLn = r(b[1] - a[1]);
+  const h = Math.sin(dLa / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(dLn / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+function bearingDeg(a, b) {
+  const r = x => x * Math.PI / 180, dLn = r(b[1] - a[1]);
+  const y = Math.sin(dLn) * Math.cos(r(b[0])), x = Math.cos(r(a[0])) * Math.sin(r(b[0])) - Math.sin(r(a[0])) * Math.cos(r(b[0])) * Math.cos(dLn);
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+const COMPASS = ["north", "north-north-east", "north-east", "east-north-east", "east", "east-south-east", "south-east", "south-south-east", "south", "south-south-west", "south-west", "west-south-west", "west", "west-north-west", "north-west", "north-north-west"];
+const compassOf = deg => COMPASS[Math.round(deg / 22.5) % 16];
+function fmtKm(km) {
+  if (km < 1) return `${Math.round(km * 1000)} m`;
+  return `${km < 100 ? km.toFixed(1) : Math.round(km).toLocaleString()} km`;
+}
+function fmtDur(min) {
+  if (min < 60) return `${Math.max(1, Math.round(min))} min`;
+  const h = Math.floor(min / 60), m = Math.round(min % 60);
+  return h >= 48 ? `${Math.floor(h / 24)} days ${h % 24} h` : `${h} h ${m} min`;
+}
+/* by-road distance from the free OSRM demo server; the answer is remembered in the data so visitors do not need it */
+const routeKey = (a, b) => [a, b].map(p => (+p[0]).toFixed(4) + "," + (+p[1]).toFixed(4)).join("|");
+async function roadRoute(a, b) {
+  const k = routeKey(a, b), c = STATE.about.route;
+  if (c && c.k === k) return c;
+  try {
+    const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${a[1]},${a[0]};${b[1]},${b[0]}?overview=false`);
+    const j = await r.json();
+    const res = j.code === "Ok" && j.routes && j.routes[0]
+      ? { k, km: j.routes[0].distance / 1000, min: j.routes[0].duration / 60 }
+      : { k, km: null, min: null };   // no road between them (an ocean, say)
+    if (EDIT) { STATE.about.route = res; saveSoon(); }
+    return res;
+  } catch (e) { return null; }
+}
+
+const canSee = (p, k) => EDIT || !(p.hide || []).includes(k);
+const lockMark = (p, k) => (EDIT && (p.hide || []).includes(k) ? ` <span class="lockmark" title="Only you can see this">🔒</span>` : "");
+
+function bdayLines(p) {
+  const a = ageParts(p.birth), nb = nextBirthday(p.birth), z = zodiacOf(p.birth);
+  if (!nb) return "";
+  const cd = nb.days === 0 ? `🎉 Happy birthday! Turning ${nb.turning} today` : `🎂 ${plural(nb.days, "day")} to go · turning ${nb.turning}`;
+  return `${a ? `<div class="agebig">${esc(ageText(a))}</div>` : ""}<div class="bd-count${nb.days === 0 ? " today" : ""}">${cd}</div>${z ? `<small>${z[1]} ${z[0]}</small>` : ""}`;
+}
+
+function profileView(w) {
+  const p = STATE.about.p[w], nm = names()[w === "a" ? 0 : 1];
+  const rows = [];
+  if (p.full && canSee(p, "full")) rows.push(["Full name", esc(p.full) + lockMark(p, "full")]);
+  if (p.nick && canSee(p, "nick")) rows.push(["Also called", esc(p.nick) + lockMark(p, "nick")]);
+  if (p.birth && canSee(p, "birth")) rows.push(["Birthday", `${esc(prettyDate(p.birth))}${lockMark(p, "birth")}<div class="bd">${bdayLines(p)}</div>`]);
+  if (p.addr && canSee(p, "addr")) rows.push(["Home", `${esc(p.addr)}${lockMark(p, "addr")}${hasPin(p) ? ` · <a href="${L("/map")}">on our map</a>` : ""}`]);
+  if (p.phone && canSee(p, "phone")) rows.push(["Phone", `<a href="tel:${esc(p.phone.replace(/[^\d+]/g, ""))}">${esc(p.phone)}</a>${lockMark(p, "phone")}`]);
+  if (p.email && canSee(p, "email")) rows.push(["Email", `<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>${lockMark(p, "email")}`]);
+  p.extra.filter(r => r.k && r.v && (EDIT || !r.priv)).forEach(r => rows.push([esc(r.k), esc(r.v) + (EDIT && r.priv ? ` <span class="lockmark" title="Only you can see this">🔒</span>` : "")]));
+  const favs = FAV.filter(([k]) => p.favs[k].length).map(([k, e, label]) => `<div class="pfav"><h4>${e} ${label}</h4><ul>${p.favs[k].map(it => `<li>${esc(it.text)}</li>`).join("")}</ul></div>`).join("");
+  return `<article class="prof reveal"><h3>${esc(nm)}</h3>
+    ${rows.length ? `<dl>${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>` : `<p class="muted">Nothing here yet.</p>`}
+    ${favs ? `<div class="pfavs">${favs}</div>` : ""}</article>`;
+}
+
+function profileEdit(w) {
+  const p = STATE.about.p[w], nm = names()[w === "a" ? 0 : 1];
+  const f = (k, type = "text", ph = "") => `<div class="pf"><label>${FIELD_LABELS[k]}</label><input type="${type}" data-f="${k}" value="${esc(p[k])}" placeholder="${esc(ph)}" autocomplete="off"><label class="lockt" title="Tick to hide this from visitors"><input type="checkbox" data-lock="${k}" ${p.hide.includes(k) ? "checked" : ""}><span>🔒</span></label></div>`;
+  return `<article class="prof editing" data-w="${w}"><h3>${esc(nm)}</h3>
+    ${f("full", "text", "Full name")}${f("nick", "text", "Nicknames, separated by commas")}${f("birth", "date")}<p class="calc" data-calc></p>
+    ${f("addr", "text", "Street, city, country")}
+    <div class="pf pinrow"><label></label><button type="button" class="ghostb" data-pin>📍 ${hasPin(p) ? "Move the pin" : "Pin the home on the map"}</button>${hasPin(p) ? `<span class="muted">pinned</span><button type="button" class="x" data-unpin title="Remove pin">✕</button>` : ""}</div>
+    ${f("phone", "tel", "+977 …")}${f("email", "email", "name@example.com")}
+    <div class="pxtra">${p.extra.map((r, i) => `<div class="pf" data-x="${i}"><input class="xk" data-xk="k" value="${esc(r.k)}" placeholder="e.g. Hometown"><input data-xk="v" value="${esc(r.v)}" placeholder="…is"><label class="lockt" title="Tick to hide this from visitors"><input type="checkbox" data-xlock ${r.priv ? "checked" : ""}><span>🔒</span></label><button type="button" class="x" data-xdel="${i}">✕</button></div>`).join("")}
+      <div class="ideas"><button type="button" class="addrow" data-xadd>＋ Add a detail</button>${EXTRA_IDEAS.filter(x => !p.extra.some(r => r.k === x)).slice(0, 6).map(x => `<button type="button" class="chipb" data-xidea="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>
+    <div class="pfavs">${FAV.map(([k, e, label]) => `<div class="pfav"><h4>${e} ${label}</h4><ul>${p.favs[k].map(it => `<li>${esc(it.text)}<button type="button" class="x" data-fdel="${k}:${it.id}">✕</button></li>`).join("") || `<li class="muted">None yet</li>`}</ul>
+      <form class="addline" data-fadd="${k}"><input placeholder="Add one…" required><button class="primary">Add</button></form></div>`).join("")}</div></article>`;
+}
+
+function betweenHTML() {
+  const [A, B] = [STATE.about.p.a, STATE.about.p.b];
+  const ok = p => hasPin(p) && canSee(p, "addr");
+  if (!(ok(A) && ok(B))) return EDIT ? `<section class="between"><h3>Between our homes</h3><p class="hint">Pin both homes (📍 above) to see the map and how far apart you are. The pins stay hidden from visitors while 🔒 is ticked on the home.</p></section>` : "";
+  const a = [+A.lat, +A.lng], b = [+B.lat, +B.lng], km = haversineKm(a, b), br = bearingDeg(a, b);
+  const [na, nb] = names();
+  return `<section class="between reveal"><h3>Between our homes</h3>
+    <div class="homesmap" id="homesmap"></div>
+    <div class="dist">
+      <div><b>${fmtKm(km)}</b><span>Displacement</span><small>${km < 0.05 ? "the very same spot 🏡" : `in a straight line, ${esc(na || "A")} → ${esc(nb || "B")}: ${esc(compassOf(br))} (${Math.round(br)}°)`}</small></div>
+      <div><b id="roadkm">…</b><span>Distance</span><small id="roadnote">by road</small></div>
+    </div></section>`;
+}
+async function mountBetween() {
+  const [A, B] = [STATE.about.p.a, STATE.about.p.b];
+  if (!$("#homesmap")) return;
+  const a = [+A.lat, +A.lng], b = [+B.lat, +B.lng];
+  const m = new TinyMap($("#homesmap"), { wheel: false });
+  [["a", a], ["b", b]].forEach(([w, pt]) => m.addMarker(pt[0], pt[1], `<div class="pin">${stickerHTML("e:🏡", 28)}</div>`, { title: `${names()[w === "a" ? 0 : 1]}'s home` }));
+  m.setLine([a, b]);
+  m.fitBounds([a, b], 50);
+  onLeave(() => m.destroy());
+  const r = await roadRoute(a, b);
+  const km = $("#roadkm"), note = $("#roadnote");
+  if (!km) return;
+  if (r && r.km) { km.textContent = fmtKm(r.km); note.textContent = `by road, about ${fmtDur(r.min)} driving`; }
+  else if (r) { km.textContent = "no road"; note.textContent = "there is no driving route between these two homes"; }
+  else { km.textContent = "—"; note.textContent = "by road (couldn't check just now)"; }
+}
+
 async function pageAbout() {
   document.title = "About us · " + STATE.title;
   const [na, nb] = names(), dt = daysTogether();
   const paint = () => done(`<main class="wrap">${crumb()}${pageTitle("About us")}
     <section class="aboutpair reveal"><div class="ab-who">${avatarSVG(avatarFor("a"), "bounce")}<b>${esc(na)}</b></div><span class="ab-heart">${stickerHTML("heart", 44)}</span><div class="ab-who">${avatarSVG(avatarFor("b"), "bounce d2")}<b>${esc(nb)}</b></div></section>
     ${STATE.since ? `<p class="statnote">Together since <b>${esc(prettyDate(STATE.since))}</b>${dt >= 0 ? ` · ${dt.toLocaleString()} days` : ""}</p>` : ""}
+    ${EDIT ? `<p class="hint pnote">🔒 Tick the lock next to anything you don't want visitors to see. Locked details stay on your device, and Publish leaves them out. Everything else is visible to anyone who has the link.</p>` : ""}
+    <section class="profiles">${EDIT ? profileEdit("a") + profileEdit("b") : profileView("a") + profileView("b")}</section>
+    ${betweenHTML()}
     ${EDIT ? `<textarea class="bigta" id="story" rows="6" placeholder="How did we meet? Tell our story…">${esc(STATE.about.story)}</textarea>`
       : STATE.about.story.trim() ? `<div class="note">${esc(STATE.about.story)}</div>` : ""}
     ${EDIT || STATE.about.facts.length ? `<section class="facts"><h3>Little facts</h3><ul>${STATE.about.facts.map((f, i) => EDIT
@@ -434,6 +568,7 @@ async function pageAbout() {
       : `<li><span>${esc(f.k)}</span><b>${esc(f.v)}</b></li>`).join("")}</ul>${EDIT ? `<button type="button" class="addrow" id="addFact">＋ Add a fact</button>` : ""}</section>` : ""}
     ${EDIT ? `<section class="looks"><h3>Dress up the mini us</h3><p class="hint">Their looks here are the base. Each day's outfit section only changes the clothes.</p><div class="outfit-edit"><div><h4>${esc(na)}</h4><div data-av="a"></div></div><div><h4>${esc(nb)}</h4><div data-av="b"></div></div></div></section>` : ""}
     </main>${footerHTML()}`, () => {
+    mountBetween();
     if (!EDIT) return;
     $("#story").addEventListener("input", e => { STATE.about.story = e.target.value; saveSoon(); });
     $("#addFact").onclick = () => { STATE.about.facts.push({ k: "", v: "" }); saveState(); paint(); };
@@ -443,6 +578,47 @@ async function pageAbout() {
       get: () => avatarFor(w), groups: BASE_GROUPS,
       set: (k, v) => { STATE.about[w][k] = v; saveSoon(); }
     }));
+    $$(".prof.editing").forEach(card => {
+      const w = card.dataset.w, p = STATE.about.p[w];
+      const calc = () => { $("[data-calc]", card).innerHTML = p.birth ? bdayLines(p) : ""; };
+      calc();
+      card.addEventListener("input", e => {
+        const t = e.target;
+        if (t.dataset.f) { p[t.dataset.f] = t.value; saveSoon(); if (t.dataset.f === "birth") calc(); }
+        const x = t.closest("[data-x]");
+        if (x && t.dataset.xk) { p.extra[+x.dataset.x][t.dataset.xk] = t.value; saveSoon(); }
+      });
+      card.addEventListener("change", e => {
+        const t = e.target;
+        if (t.dataset.lock) { p.hide = p.hide.filter(k => k !== t.dataset.lock); if (t.checked) p.hide.push(t.dataset.lock); saveState(); }
+        if (t.dataset.xlock !== undefined) { p.extra[+t.closest("[data-x]").dataset.x].priv = t.checked; saveState(); }
+      });
+      card.addEventListener("click", async e => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        if (b.dataset.pin !== undefined) {
+          const r = await pickPlace(p);
+          if (!r) return;
+          p.lat = r.lat; p.lng = r.lng;
+          if (!p.addr && r.name) p.addr = r.name;
+          STATE.about.route = null; saveState(); paint();
+        }
+        if (b.dataset.unpin !== undefined) { p.lat = ""; p.lng = ""; STATE.about.route = null; saveState(); paint(); }
+        if (b.dataset.xadd !== undefined) { p.extra.push({ k: "", v: "", priv: false }); saveState(); paint(); }
+        if (b.dataset.xidea) { p.extra.push({ k: b.dataset.xidea, v: "", priv: false }); saveState(); paint(); }
+        if (b.dataset.xdel !== undefined) { p.extra.splice(+b.dataset.xdel, 1); saveState(); paint(); }
+        if (b.dataset.fdel) { const [k, id] = b.dataset.fdel.split(":"); p.favs[k] = p.favs[k].filter(x => x.id !== id); saveState(); paint(); }
+      });
+      card.addEventListener("submit", e => {
+        const f = e.target.closest("[data-fadd]");
+        if (!f) return;
+        e.preventDefault();
+        const v = $("input", f).value.trim();
+        if (!v) return;
+        p.favs[f.dataset.fadd].push({ id: uid(), text: v });
+        saveState(); paint();
+      });
+    });
   });
   paint();
 }

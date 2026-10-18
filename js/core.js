@@ -26,6 +26,9 @@ let dirty = false;
 
 const replacer = (k, v) => (k.startsWith("_") ? undefined : v);   // runtime-only fields are never saved
 
+const FAV_KEYS = ["songs", "foods", "films", "places"];
+const profileBlank = () => ({ full: "", nick: "", birth: "", addr: "", lat: "", lng: "", phone: "", email: "", extra: [], favs: { songs: [], foods: [], films: [], places: [] }, hide: ["addr", "phone", "email"] });
+
 function blankState() {
   return {
     schema: SCHEMA, title: "Our Little Garden", subtitle: "", since: "", names: ["", ""],
@@ -33,8 +36,7 @@ function blankState() {
     stickers: ["sunflower", "lily", "mushroom", ...NEW_STICKERS], stkv: 2,
     music: { title: "", url: "", src: "", kind: "" },
     days: [], bucket: [], jar: [], letters: [],
-    favorites: { songs: [], foods: [], films: [], places: [] },
-    about: { story: "", facts: [], a: {}, b: {} }
+    about: { story: "", facts: [], a: {}, b: {}, p: { a: {}, b: {} }, route: null }
   };
 }
 
@@ -60,9 +62,20 @@ function normalize(s) {
   for (const k in b) if (s[k] === undefined || s[k] === null) s[k] = b[k];
   s.names = Array.isArray(s.names) ? s.names.slice(0, 2) : ["", ""];
   while (s.names.length < 2) s.names.push("");
-  s.favorites = Object.assign(blankState().favorites, s.favorites || {});
+  // each of you now has your own profile (names, birthday, contact, home, favorites). The old shared favorites go to both of you.
+  const oldFav = s.favorites; delete s.favorites;
   s.about = Object.assign(blankState().about, s.about || {});
   s.about.a = s.about.a || {}; s.about.b = s.about.b || {};
+  s.about.p = s.about.p || {};
+  ["a", "b"].forEach(w => {
+    const p = Object.assign(profileBlank(), s.about.p[w] || {});
+    p.favs = Object.assign(profileBlank().favs, p.favs || {});
+    FAV_KEYS.forEach(k => { if (!Array.isArray(p.favs[k])) p.favs[k] = []; });
+    if (!Array.isArray(p.extra)) p.extra = [];
+    if (!Array.isArray(p.hide)) p.hide = ["addr", "phone", "email"];
+    if (oldFav && typeof oldFav === "object") FAV_KEYS.forEach(k => (Array.isArray(oldFav[k]) ? oldFav[k] : []).forEach(it => { if (it && it.text && !p.favs[k].some(x => x.text === it.text)) p.favs[k].push({ id: uid(), text: it.text }); }));
+    s.about.p[w] = p;
+  });
   s.music = Object.assign(blankState().music, s.music || {});
   delete s.theme;   // one look only now: cottagecore, with a day and a night mode
   if (!Array.isArray(s.stickers) || !s.stickers.length) s.stickers = ["sunflower", "lily", "mushroom", ...NEW_STICKERS];

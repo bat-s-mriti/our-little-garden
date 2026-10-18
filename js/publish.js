@@ -30,7 +30,7 @@ function toBase64(blob) {
 async function publishNow(cfg) {
   const step = t => toast(t, true);
   step("Packing your garden…");
-  const { st, media, used } = await buildBundle();
+  const { st, media, used } = await buildBundle({ publish: true });
   step("Checking what's already online…");
   const ref = await gh(cfg, `git/ref/heads/${encodeURIComponent(cfg.branch).replace(/%2F/g, "/")}`);
   const commit = await gh(cfg, `git/commits/${ref.object.sha}`);

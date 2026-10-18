@@ -115,8 +115,7 @@ html[data-mode="night"] .w-night { opacity: 1; }
   .it.map { left: var(--x); top: calc(var(--top) + var(--step)); }
   .it.bee { left: var(--x); top: calc(var(--top) + var(--step) * 2); }
   .it.win { right: var(--x); top: var(--top); }
-  .it.wre { right: var(--x); top: calc(var(--top) + var(--step)); }
-  .it.frm { right: var(--x); top: calc(var(--top) + var(--step) * 2); }
+  .it.frm { right: var(--x); top: calc(var(--top) + var(--step)); }
   .it.jar { left: calc(var(--gut) * .26 - var(--tw) / 2); }
   .it.pail { left: calc(var(--gut) * .74 - var(--tw) / 2); }
   .it.egg { right: calc(var(--gut) * .26 - var(--tw) / 2); }

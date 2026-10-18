@@ -131,3 +131,19 @@ fieldset.themes legend { font-size: .85rem; padding: 0 6px; }
 
 .toolbar .pubb { background: var(--sun); font-weight: 700; }
 dialog .hint, .modal .hint { font-size: .85rem; color: var(--muted); margin: 6px 0; line-height: 1.4; }
+
+/* About us editing */
+.pnote { max-width: 640px; margin: 14px auto 0; text-align: center; }
+.prof.editing .pf { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.prof.editing .pf > label:first-child { flex: none; width: 88px; font-size: .85rem; font-weight: 700; color: var(--muted); }
+.prof.editing .pf input:not([type=checkbox]) { flex: 1; min-width: 0; font: inherit; color: var(--ink); background: var(--white); border: 2px solid var(--butter); border-radius: 12px; padding: 7px 12px; }
+.prof.editing .pxtra { margin-top: 10px; }
+.prof.editing .pxtra .xk { flex: 0 0 38%; }
+.lockt { flex: none; display: inline-flex; align-items: center; gap: 2px; cursor: pointer; font-size: .95rem; opacity: .55; }
+.lockt:has(input:checked) { opacity: 1; }
+.lockt input { accent-color: var(--leaf); }
+.pinrow .muted { font-size: .85rem; }
+.ideas { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
+.chipb { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--white); cursor: pointer; font-size: .8rem; }
+.chipb:hover { background: var(--butter); }
+.prof.editing .pfav .addline { margin-top: 2px; }
