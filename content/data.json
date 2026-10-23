@@ -8,11 +8,16 @@
  ],
  "since": "2026-08-01",
  "currency": "$",
- "theme": "editorial",
  "stickers": [
   "sunflower",
   "lily",
-  "mushroom"
+  "mushroom",
+  "daisy",
+  "tulip",
+  "strawberry",
+  "butterfly",
+  "cherry",
+  "bee"
  ],
  "bucket": [
   {
@@ -448,17 +453,57 @@
   "src": "",
   "kind": ""
  },
- "favorites": {
-  "songs": [],
-  "foods": [],
-  "films": [],
-  "places": []
- },
  "about": {
   "story": "",
   "facts": [],
-  "a": {},
-  "b": {}
+  "a": {
+   "hair": "short"
+  },
+  "b": {},
+  "p": {
+   "a": {
+    "full": "Batsal Manandhar",
+    "nick": "BatMan",
+    "birth": "2004-05-08",
+    "addr": "",
+    "lat": 27.670662,
+    "lng": 85.423967,
+    "phone": "",
+    "email": "",
+    "extra": [],
+    "favs": {
+     "songs": [],
+     "foods": [],
+     "films": [],
+     "places": []
+    },
+    "hide": []
+   },
+   "b": {
+    "full": "Smriti Datheputhe",
+    "nick": "Smirtu",
+    "birth": "2005-06-25",
+    "addr": "",
+    "lat": 27.694871,
+    "lng": 85.448532,
+    "phone": "",
+    "email": "",
+    "extra": [],
+    "favs": {
+     "songs": [],
+     "foods": [],
+     "films": [],
+     "places": []
+    },
+    "hide": []
+   }
+  },
+  "route": {
+   "k": "27.6707,85.4240|27.6949,85.4485",
+   "km": 4.8668000000000005,
+   "min": 7.288333333333333
+  }
  },
- "publishedAt": "2026-10-16T15:47:53.240Z"
+ "stkv": 2,
+ "publishedAt": "2026-10-23T05:20:50.105Z"
 }
