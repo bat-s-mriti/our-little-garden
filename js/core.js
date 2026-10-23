@@ -18,7 +18,7 @@ function runLeave() { while (LEAVE.length) { try { LEAVE.pop()(); } catch (e) { 
 const SCHEMA = 2;
 const KEY = "garden.v1";          // same key as the first version, so existing data carries over
 const EDIT_KEY = "garden.edit";
-const BUILTIN_STICKERS = ["sunflower", "lily", "mushroom", "heart", "daisy", "tulip", "strawberry", "butterfly", "cherry", "bee"];
+const BUILTIN_STICKERS = ["sunflower", "lily", "mushroom", "heart", "daisy", "tulip", "strawberry", "butterfly", "cherry", "bee", "headA", "headB"];
 const NEW_STICKERS = ["daisy", "tulip", "strawberry", "butterfly", "cherry", "bee"];
 let STATE = null;
 let EDIT = false;
@@ -33,10 +33,10 @@ function blankState() {
   return {
     schema: SCHEMA, title: "Our Little Garden", subtitle: "", since: "", names: ["", ""],
     currency: "$",
-    stickers: ["sunflower", "lily", "mushroom", ...NEW_STICKERS], stkv: 2,
+    stickers: ["sunflower", "lily", "mushroom", ...NEW_STICKERS, "headA", "headB"], stkv: 3, outfits: [],
     music: { title: "", url: "", src: "", kind: "" },
     days: [], bucket: [], jar: [], letters: [],
-    about: { story: "", facts: [], a: {}, b: {}, p: { a: {}, b: {} }, route: null }
+    about: { story: "", facts: [], a: {}, b: {}, p: { a: {}, b: {} }, route: null, outfit: { a: "b:tee", b: "b:dress" } }
   };
 }
 
@@ -58,6 +58,7 @@ function migrate(s) {
 function normalize(s) {
   // one-time: older sites get the new drawn stickers added (they can still be removed on the Stickers page)
   if (!s.stkv && Array.isArray(s.stickers)) { NEW_STICKERS.forEach(id => { if (!s.stickers.includes(id)) s.stickers.push(id); }); s.stkv = 2; }
+  if (s.stkv < 3 && Array.isArray(s.stickers)) { ["headA", "headB"].forEach(id => { if (!s.stickers.includes(id)) s.stickers.push(id); }); s.stkv = 3; }
   const b = blankState();
   for (const k in b) if (s[k] === undefined || s[k] === null) s[k] = b[k];
   s.names = Array.isArray(s.names) ? s.names.slice(0, 2) : ["", ""];
@@ -66,6 +67,10 @@ function normalize(s) {
   const oldFav = s.favorites; delete s.favorites;
   s.about = Object.assign(blankState().about, s.about || {});
   s.about.a = s.about.a || {}; s.about.b = s.about.b || {};
+  if (!Array.isArray(s.outfits)) s.outfits = [];
+  s.about.outfit = Object.assign({ a: "b:tee", b: "b:dress" }, s.about.outfit || {});
+  // outfits are no longer editable: old per-day colour choices become "wear what they wear on About us"
+  (s.days || []).forEach(d => (d.sections || []).forEach(x => { if (x.type === "outfit" && x.data) { ["a", "b"].forEach(w => { if (typeof x.data[w] !== "string") x.data[w] = ""; }); } }));
   s.about.p = s.about.p || {};
   ["a", "b"].forEach(w => {
     const p = Object.assign(profileBlank(), s.about.p[w] || {});

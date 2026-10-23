@@ -1,115 +1,124 @@
-/* avatar.js: the "mini us" characters, drawn from parts, plus the builder UI. */
+/* avatar.js: the "mini us". Fixed heads (heads.js) + an outfit from the library. Outfits are not editable, they come from outfit files.
+
+   OUTFIT FILE (.json), one per outfit day, made from a photo (see the outfit prompt):
+   { "format":"mini-us-outfit", "v":1, "id":"2026-10-11-picnic", "name":"Picnic day", "date":"2026-10-11", "occasion":"",
+     "a": { "body":"<svg shapes>", "over":"<svg shapes>" }, "b": { ... } }          (a = first person, b = second; either may be left out)
+   `body` is drawn under the head, `over` on top of it (hat, glasses, scarf, hair clips). Shapes live in a fixed 100 x 140 space (head slot: circle centre 50,38 radius 25). */
 "use strict";
 
-const AV = {
-  skins: ["#fde0c8", "#f1c9a5", "#e0ac82", "#c68863", "#9a6644", "#6f4a33"],
-  hairColors: ["#2b1d16", "#5b3a29", "#8a5a36", "#c68a4b", "#e8c26a", "#d8d2c8", "#c2527a", "#4f7d4a", "#5b7cc2"],
-  clothColors: ["#ffffff", "#f7c531", "#f9a8c0", "#e0534a", "#f4a259", "#7bab6e", "#6fb7c9", "#5b7cc2", "#9b7bc2", "#5d6d8a", "#3b2a20"],
-  hair: [["short", "Short"], ["bob", "Bob"], ["long", "Long"], ["curly", "Curly"], ["bun", "Bun"], ["ponytail", "Ponytail"], ["buzz", "Buzz"], ["bald", "None"]],
-  tops: [["tee", "T-shirt"], ["hoodie", "Hoodie"], ["sweater", "Sweater"], ["tank", "Tank"], ["dress", "Dress"]],
-  bottoms: [["pants", "Pants"], ["shorts", "Shorts"], ["skirt", "Skirt"]],
-  accs: [["none", "None"], ["glasses", "Glasses"], ["sunglasses", "Shades"], ["beanie", "Beanie"], ["cap", "Cap"], ["flower", "Flower"], ["bow", "Bow"], ["scarf", "Scarf"]]
-};
-const AV_DEFAULT = {
-  a: { skin: "#f1c9a5", hair: "short", hairColor: "#2b1d16", top: "tee", topColor: "#7bab6e", bottom: "pants", bottomColor: "#5d6d8a", shoes: "#ffffff", acc: "none", accColor: "#f7c531" },
-  b: { skin: "#f1c9a5", hair: "long", hairColor: "#5b3a29", top: "dress", topColor: "#f9a8c0", bottom: "pants", bottomColor: "#5d6d8a", shoes: "#ffffff", acc: "flower", accColor: "#f7c531" }
-};
-const BASE_GROUPS = [
-  { key: "skin", label: "Skin", type: "color", opts: AV.skins },
-  { key: "hair", label: "Hair", type: "chip", opts: AV.hair },
-  { key: "hairColor", label: "Hair colour", type: "color", opts: AV.hairColors }
-];
-const OUTFIT_KEYS = ["top", "topColor", "bottom", "bottomColor", "shoes", "acc", "accColor"];
-const OUTFIT_GROUPS = [
-  { key: "top", label: "Top", type: "chip", opts: AV.tops },
-  { key: "topColor", label: "Top colour", type: "color", opts: AV.clothColors },
-  { key: "bottom", label: "Bottoms", type: "chip", opts: AV.bottoms },
-  { key: "bottomColor", label: "Bottoms colour", type: "color", opts: AV.clothColors },
-  { key: "shoes", label: "Shoes", type: "color", opts: AV.clothColors },
-  { key: "acc", label: "Extra", type: "chip", opts: AV.accs },
-  { key: "accColor", label: "Extra colour", type: "color", opts: AV.clothColors }
-];
+const OUTFIT_FORMAT = "mini-us-outfit", OUTFIT_MAX = 30000;
+const OF_TAGS = new Set(["g", "path", "circle", "ellipse", "rect", "line", "polygon", "polyline"]);
+const OF_ATTRS = new Set(["d", "cx", "cy", "r", "rx", "ry", "x", "y", "x1", "y1", "x2", "y2", "width", "height", "points", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity", "fill-opacity", "stroke-opacity", "transform", "stroke-dasharray", "fill-rule"]);
 
-/* base look (About us page) + one day's clothes */
-function avatarFor(who, outfit) {
-  return Object.assign({}, AV_DEFAULT[who], STATE.about[who] || {}, (outfit && outfit[who]) || {});
+/* flat shapes only; anything else is dropped */
+function cleanShapes(str) {
+  str = String(str || "");
+  if (!str.trim() || str.length > OUTFIT_MAX) return "";
+  let doc;
+  try { doc = new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg">${str}</svg>`, "image/svg+xml"); } catch (e) { return ""; }
+  if (doc.querySelector("parsererror")) return "";
+  const walk = n => {
+    let out = "";
+    for (const el of n.children) {
+      const t = el.localName.toLowerCase();
+      if (!OF_TAGS.has(t)) continue;
+      let at = "";
+      for (const a of el.attributes) {
+        const k = a.name.toLowerCase(), v = a.value;
+        if (!OF_ATTRS.has(k) || /url\s*\(|javascript:|<|"/i.test(v)) continue;
+        at += ` ${k}="${v}"`;
+      }
+      out += `<${t}${at}>${walk(el)}</${t}>`;
+    }
+    return out;
+  };
+  return walk(doc.documentElement);
 }
 
-function avatarInner(c) {
-  const o = "#5b3a29", S = c.skin, H = c.hairColor, T = c.topColor, B = c.bottomColor, A = c.accColor, SH = c.shoes;
-  const sleeves = c.top === "hoodie" || c.top === "sweater";
-  const st = `stroke="${o}" stroke-width="1.5" stroke-linejoin="round"`;
-  let s = "";
-  // hair behind
-  if (c.hair === "long") s += `<path d="M25 42 Q22 88 34 90 L66 90 Q78 88 75 42Z" fill="${H}"/>`;
-  if (c.hair === "bob") s += `<path d="M26 42 Q25 70 35 72 L65 72 Q75 70 74 42Z" fill="${H}"/>`;
-  if (c.hair === "ponytail") s += `<ellipse cx="78" cy="52" rx="7" ry="15" fill="${H}" transform="rotate(-18 78 52)"/>`;
-  if (c.hair === "curly") s += [[27, 40], [25, 52], [29, 62], [73, 40], [75, 52], [71, 62]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9" fill="${H}"/>`).join("");
-  if (c.top === "hoodie") s += `<ellipse cx="50" cy="66" rx="23" ry="9" fill="${T}" ${st}/>`;
-  // arms and hands
-  const arm = sleeves ? T : S;
-  s += `<rect x="25" y="66" width="9" height="27" rx="4.5" fill="${arm}" ${st}/><rect x="66" y="66" width="9" height="27" rx="4.5" fill="${arm}" ${st}/>`;
-  s += `<circle cx="29.5" cy="94" r="4.6" fill="${S}" ${st}/><circle cx="70.5" cy="94" r="4.6" fill="${S}" ${st}/>`;
-  // legs, bottoms, shoes
-  s += `<rect x="39" y="98" width="9" height="28" rx="4" fill="${S}" ${st}/><rect x="52" y="98" width="9" height="28" rx="4" fill="${S}" ${st}/>`;
-  if (c.top !== "dress") {
-    if (c.bottom === "pants") s += `<path d="M37 97 L63 97 L62 124 L52 124 L50 108 L48 124 L38 124Z" fill="${B}" ${st}/>`;
-    else if (c.bottom === "shorts") s += `<path d="M37 97 L63 97 L63 113 L52 113 L50 106 L48 113 L37 113Z" fill="${B}" ${st}/>`;
-    else s += `<path d="M35 97 L65 97 L72 114 L28 114Z" fill="${B}" ${st}/>`;
-  }
-  s += `<ellipse cx="43" cy="128" rx="7.5" ry="4" fill="${SH}" ${st}/><ellipse cx="57" cy="128" rx="7.5" ry="4" fill="${SH}" ${st}/>`;
-  // top
-  if (c.top === "tee") s += `<path d="M34 66 Q50 72 66 66 L72 82 L64 85 L63 102 L37 102 L36 85 L28 82Z" fill="${T}" ${st}/>`;
-  else if (c.top === "tank") s += `<path d="M38 66 Q50 74 62 66 L64 102 L36 102Z" fill="${T}" ${st}/>`;
-  else if (c.top === "dress") s += `<path d="M35 66 Q50 72 65 66 L72 84 L63 85 L68 114 L32 114 L37 85 L28 84Z" fill="${T}" ${st}/>`;
+/* the built-in outfits (plain drawings, fixed) */
+function plainBody(c) {
+  const o = "#6b4a3a", S = c.skin || "#e3b48d", T = c.top, B = c.bottom, SH = c.shoes || "#ffffff";
+  const st = `stroke="${o}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"`, sl = c.sleeves ? T : S;
+  // base body: short round arms with mitten hands, stubby legs, round shoes
+  let s = `<ellipse cx="26.5" cy="82" rx="5.6" ry="12.5" transform="rotate(7 26.5 82)" fill="${sl}" ${st}/><ellipse cx="73.5" cy="82" rx="5.6" ry="12.5" transform="rotate(-7 73.5 82)" fill="${sl}" ${st}/>`;
+  s += `<circle cx="24.5" cy="95" r="5" fill="${S}" ${st}/><circle cx="75.5" cy="95" r="5" fill="${S}" ${st}/>`;
+  s += `<rect x="37.5" y="100" width="10.5" height="23" rx="5.2" fill="${S}" ${st}/><rect x="52" y="100" width="10.5" height="23" rx="5.2" fill="${S}" ${st}/>`;
+  if (c.kind === "dress") s += `<path d="M36 66 Q50 62.5 64 66 Q69 74 72 92 Q75 106 76 112 Q50 120 24 112 Q25 106 28 92 Q31 74 36 66Z" fill="${T}" ${st}/>`;
   else {
-    s += `<path d="M34 66 Q50 72 66 66 L68 86 L63 102 L37 102 L32 86Z" fill="${T}" ${st}/>`;
-    if (c.top === "hoodie") s += `<path d="M42 90 H58 L60 98 H40Z" fill="none" stroke="${o}" stroke-width="1.2" opacity=".55"/>`;
-    else s += `<path d="M40 67 Q50 77 60 67" fill="none" stroke="${o}" stroke-width="1.5"/><path d="M37 98 H63" stroke="${o}" stroke-width="1.2" opacity=".5"/>`;
+    if (c.kind === "skirt") s += `<path d="M33 98 Q50 94 67 98 Q74 106 76 113 Q50 120 24 113 Q26 106 33 98Z" fill="${B}" ${st}/>`;
+    else s += `<rect x="36" y="98" width="12.5" height="25" rx="5.5" fill="${B}" ${st}/><rect x="51.5" y="98" width="12.5" height="25" rx="5.5" fill="${B}" ${st}/><path d="M36 100 Q50 95 64 100 L64 106 L36 106Z" fill="${B}"/>`;
+    s += `<path d="M36 66 Q50 62.5 64 66 Q71 72 70 90 Q69 104 60 105 L40 105 Q31 104 30 90 Q29 72 36 66Z" fill="${T}" ${st}/>`;
+    if (c.sleeves) s += `<ellipse cx="26.5" cy="80" rx="5.6" ry="10" transform="rotate(7 26.5 80)" fill="${T}" ${st}/><ellipse cx="73.5" cy="80" rx="5.6" ry="10" transform="rotate(-7 73.5 80)" fill="${T}" ${st}/>`;
   }
-  if (c.acc === "scarf") s += `<path d="M34 64 Q50 72 66 64 L66 71 Q50 79 34 71Z" fill="${A}" ${st}/><rect x="57" y="70" width="8" height="17" rx="3" fill="${A}" ${st}/>`;
-  // head and face
-  s += `<circle cx="27.5" cy="46" r="4.5" fill="${S}" ${st}/><circle cx="72.5" cy="46" r="4.5" fill="${S}" ${st}/>`;
-  s += `<circle cx="50" cy="42" r="22" fill="${S}" ${st}/>`;
-  s += `<ellipse cx="41" cy="45" rx="2.4" ry="3.2" fill="#3b2a20"/><ellipse cx="59" cy="45" rx="2.4" ry="3.2" fill="#3b2a20"/><circle cx="41.8" cy="43.8" r=".9" fill="#fff"/><circle cx="59.8" cy="43.8" r=".9" fill="#fff"/>`;
-  s += `<circle cx="34.5" cy="52" r="3.6" fill="#ff8fa3" opacity=".55"/><circle cx="65.5" cy="52" r="3.6" fill="#ff8fa3" opacity=".55"/><path d="M46 53 Q50 57.5 54 53" fill="none" stroke="#3b2a20" stroke-width="1.8" stroke-linecap="round"/>`;
-  // hair in front
-  const fringe = `<path d="M27 42 Q24 14 50 14 Q76 14 73 42 Q66 27 50 27 Q34 27 27 42Z" fill="${H}"/>`;
-  if (c.hair === "bun") s += `<circle cx="50" cy="11" r="9" fill="${H}"/>` + fringe;
-  else if (c.hair === "curly") s += fringe + [[36, 18], [48, 13], [60, 17], [68, 26], [31, 28]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9" fill="${H}"/>`).join("");
-  else if (c.hair === "buzz") s += `<path d="M28 40 Q27 20 50 19 Q73 20 72 40 Q62 32 50 32 Q38 32 28 40Z" fill="${H}" opacity=".9"/>`;
-  else if (c.hair !== "bald") s += fringe;
-  // extras
-  if (c.acc === "glasses") s += `<g fill="none" stroke="#3b2a20" stroke-width="1.8"><circle cx="41" cy="45" r="7"/><circle cx="59" cy="45" r="7"/><path d="M48 45 H52"/></g>`;
-  if (c.acc === "sunglasses") s += `<g fill="#2b1d16"><rect x="33" y="40" width="15" height="10" rx="4"/><rect x="52" y="40" width="15" height="10" rx="4"/><rect x="47" y="42" width="6" height="2"/></g>`;
-  if (c.acc === "beanie") s += `<path d="M27 38 Q26 12 50 12 Q74 12 73 38Z" fill="${A}" ${st}/><rect x="26" y="34" width="48" height="8" rx="4" fill="${A}" ${st}/><circle cx="50" cy="11" r="5" fill="${A}" ${st}/>`;
-  if (c.acc === "cap") s += `<path d="M27 38 Q27 14 50 14 Q73 14 73 38Z" fill="${A}" ${st}/><path d="M60 36 Q82 34 84 42 Q70 42 60 40Z" fill="${A}" ${st}/>`;
-  if (c.acc === "flower") s += [0, 72, 144, 216, 288].map(a => `<circle cx="${70 + 5.5 * Math.cos(a * Math.PI / 180)}" cy="${24 + 5.5 * Math.sin(a * Math.PI / 180)}" r="4.2" fill="${A}" stroke="${o}" stroke-width="1"/>`).join("") + `<circle cx="70" cy="24" r="3" fill="#f7c531" stroke="${o}" stroke-width="1"/>`;
-  if (c.acc === "bow") s += `<g fill="${A}" ${st}><path d="M68 22 L58 15 L58 29Z"/><path d="M68 22 L78 15 L78 29Z"/><circle cx="68" cy="22" r="3.2"/></g>`;
+  s += `<ellipse cx="42.5" cy="127" rx="8.5" ry="5" fill="${SH}" ${st}/><ellipse cx="57.5" cy="127" rx="8.5" ry="5" fill="${SH}" ${st}/>`;
   return s;
 }
-function avatarSVG(c, cls = "") {
-  return `<svg class="avatar ${cls}" viewBox="0 0 100 140" role="img" aria-label="mini character">${avatarInner(Object.assign({}, AV_DEFAULT.a, c))}</svg>`;
+const BUILTIN_OUTFITS = [
+  { id: "b:tee", name: "Tee & jeans", body: plainBody({ kind: "pants", top: "#7bab6e", bottom: "#5d6d8a" }), over: "" },
+  { id: "b:dress", name: "Pink dress", body: plainBody({ kind: "dress", top: "#f9a8c0" }), over: "" },
+  { id: "b:sweater", name: "Cosy sweater", body: plainBody({ kind: "pants", top: "#f4a259", bottom: "#3b2a20", sleeves: 1 }), over: "" },
+  { id: "b:skirt", name: "Skirt & top", body: plainBody({ kind: "skirt", top: "#ffffff", bottom: "#9b7bc2", shoes: "#e0534a" }), over: "" },
+  { id: "b:sun", name: "Sunny day", body: plainBody({ kind: "dress", top: "#f7c531" }), over: "" }
+];
+const DEFAULT_OUTFIT = { a: "b:tee", b: "b:dress" };
+
+/* the library: built-ins + uploaded (STATE.outfits, each belongs to one person: who = "a" or "b") */
+const outfitsFor = w => [...BUILTIN_OUTFITS.map(o => Object.assign({ who: w }, o)), ...(STATE.outfits || []).filter(o => o.who === w)];
+function outfitById(w, id) {
+  return outfitsFor(w).find(o => o.id === id) || BUILTIN_OUTFITS.find(o => o.id === DEFAULT_OUTFIT[w]);
+}
+/* what they wear on the About us page right now */
+const currentOutfit = w => (STATE.about.outfit && STATE.about.outfit[w]) || DEFAULT_OUTFIT[w];
+
+function avatarInner(w, outfitId) {
+  const of = outfitById(w, outfitId || currentOutfit(w));
+  const head = g => `<g transform="translate(50 66) scale(1.16) translate(-50 -66)">${g}</g>`;
+  return `${head(HEADS[w].back)}${of.body}${head(HEADS[w].front)}${of.over || ""}`;
+}
+function avatarSVG(w, outfitId, cls = "") {
+  return `<svg class="avatar ${cls}" viewBox="0 -12 100 152" role="img" aria-label="mini character">${avatarInner(w, outfitId)}</svg>`;
 }
 
-/* The builder: live preview + chips and swatches. get() returns the full look, set(key, value) saves a choice. */
-function avatarBuilder(mount, { get, set, groups }) {
+/* read outfit files; returns the outfits added. They are stored per person and selected by the caller. */
+async function importOutfitFiles(files) {
+  const added = [], bad = [];
+  for (const f of files) {
+    try {
+      const j = JSON.parse(await f.text());
+      if (j.format !== OUTFIT_FORMAT) throw new Error("format");
+      const fid = String(j.id || f.name.replace(/\.[^.]+$/, "")).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "outfit";
+      let n = 0;
+      for (const w of ["a", "b"]) {
+        if (!j[w]) continue;
+        const body = cleanShapes(j[w].body), over = cleanShapes(j[w].over);
+        if (!body) continue;
+        const o = { id: `${fid}.${w}`, who: w, name: String(j.name || fid).slice(0, 60), occasion: String(j.occasion || "").slice(0, 80), date: /^\d{4}-\d{2}-\d{2}$/.test(j.date || "") ? j.date : "", body, over };
+        STATE.outfits = (STATE.outfits || []).filter(x => x.id !== o.id); STATE.outfits.push(o);
+        added.push(o); n++;
+      }
+      if (!n) throw new Error("empty");
+    } catch (e) { bad.push(f.name); }
+  }
+  if (added.length) saveState();
+  return { added, bad };
+}
+
+/* a sideways row of outfits to scroll through and pick from */
+function outfitPicker(mount, w, { get, set, onRemove }) {
+  let first = true;
   const paint = () => {
-    const c = get();
-    mount.innerHTML = `<div class="avb"><div class="avb-prev">${avatarSVG(c)}</div><div class="avb-ctl">${groups.map(g => `
-      <div class="avb-row"><span class="avb-lab">${g.label}</span><div class="avb-opts">${g.opts.map(o => {
-        const v = Array.isArray(o) ? o[0] : o, lab = Array.isArray(o) ? o[1] : "";
-        const on = c[g.key] === v ? " on" : "";
-        return g.type === "color"
-          ? `<button type="button" class="sw${on}" data-k="${g.key}" data-v="${v}" style="--c:${v}" aria-label="${g.label} ${v}"></button>`
-          : `<button type="button" class="chipb${on}" data-k="${g.key}" data-v="${v}">${lab}</button>`;
-      }).join("")}</div></div>`).join("")}</div></div>`;
+    const cur = get(), keep = first ? 0 : ($(".ofrow", mount) || {}).scrollLeft || 0;
+    const list = outfitsFor(w);
+    mount.innerHTML = `<div class="ofrow" role="listbox">${list.map(o => `<div class="ofcard${o.id === cur ? " on" : ""}" data-id="${esc(o.id)}"><button type="button" class="ofpick" data-pick="${esc(o.id)}" aria-label="${esc(o.name)}"><svg viewBox="14 -12 72 150" aria-hidden="true">${avatarInner(w, o.id)}</svg></button><small>${esc(o.name)}${o.date ? `<br><i>${esc(prettyDate(o.date, true))}</i>` : ""}</small>${o.id.startsWith("b:") ? "" : `<button type="button" class="x ofdel" data-del="${esc(o.id)}" title="Remove this outfit from the library">✕</button>`}</div>`).join("")}</div>`;
+    const r = $(".ofrow", mount), on = $(".ofcard.on", mount);
+    if (first && on) r.scrollLeft = on.offsetLeft - r.clientWidth / 2 + on.clientWidth / 2; else r.scrollLeft = keep;
+    first = false;
   };
   mount.addEventListener("click", e => {
-    const b = e.target.closest("button[data-k]");
-    if (!b) return;
-    set(b.dataset.k, b.dataset.v);
-    paint();
+    const p = e.target.closest("[data-pick]"), d = e.target.closest("[data-del]");
+    if (p) { set(p.dataset.pick); paint(); }
+    else if (d && confirm("Remove this outfit from the library?")) { onRemove(d.dataset.del); paint(); }
   });
   paint();
+  return paint;
 }

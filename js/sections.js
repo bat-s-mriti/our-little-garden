@@ -9,6 +9,8 @@ function fixSection(sec) {
   sec.data = Object.assign(T ? T.make() : {}, sec.data || {});
 }
 const stars = n => "★".repeat(n) + "☆".repeat(5 - n);
+/* Google Maps link for a pin, no key needed */
+const gmapsUrl = r => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(`${(+r.lat).toFixed(6)},${(+r.lng).toFixed(6)}`);
 const hasGeo = r => r && r.lat !== undefined && r.lat !== null && r.lat !== "" && !isNaN(+r.lat) && r.lng !== "" && r.lng !== undefined && !isNaN(+r.lng);
 
 /* ---------- media (photos, videos) ---------- */
@@ -250,7 +252,7 @@ rowsType("places", {
     if (!r.name && p.name) r.name = p.name;
     saveState(); ctx.rerender();
   },
-  view: (rows, s) => `${rows.some(hasGeo) ? `<div class="minimap" data-map></div>` : ""}<ol class="placelist">${rows.map(r => `<li><b>${esc(r.name || "Somewhere lovely")}</b>${r.note ? `<span>${esc(r.note)}</span>` : ""}</li>`).join("")}</ol>`,
+  view: (rows, s) => `${rows.some(hasGeo) ? `<div class="minimap" data-map></div>` : ""}<ol class="placelist">${rows.map(r => `<li><b>${esc(r.name || "Somewhere lovely")}</b>${r.note ? `<span>${esc(r.note)}</span>` : ""}${hasGeo(r) ? `<a class="gmap" href="${esc(gmapsUrl(r))}" target="_blank" rel="noopener">Open in Google Maps ↗</a>` : ""}</li>`).join("")}</ol>`,
   after: (el, s) => { const box = $("[data-map]", el); const g = s.data.rows.filter(hasGeo); if (box && g.length) mountPlacesMap(box, g); }
 });
 /* in edit mode the places section also shows a map preview */
@@ -300,33 +302,42 @@ rowsType("scorecard", {
 });
 
 defType("outfit", {
-  label: "Mini-us outfits", emoji: "👗", desc: "Dress up the little you two for the day. Add an AI picture too if you like.",
-  make: () => ({ occasion: "", a: {}, b: {}, photo: null, caption: "" }),
-  create: () => {
-    const d = SECTION_TYPES.outfit.make();
-    ["a", "b"].forEach(w => { const c = avatarFor(w); OUTFIT_KEYS.forEach(k => { d[w][k] = c[k]; }); });
-    return d;
-  },
+  label: "Mini-us outfits", emoji: "👗", desc: "What the little you two wore that day. Upload an outfit file, or pick from your outfit library.",
+  make: () => ({ occasion: "", a: "", b: "", photo: null, caption: "" }),
+  create: () => { const d = SECTION_TYPES.outfit.make(); d.a = currentOutfit("a"); d.b = currentOutfit("b"); return d; },
   empty: () => false,
   view: s => {
     const [na, nb] = names(), d = s.data;
-    return `<div class="outfit-stage">${["a", "b"].map(w => `<div class="outfit-who">${avatarSVG(avatarFor(w, d), "bounce")}<span>${esc(w === "a" ? na : nb)}</span></div>`).join("")}</div>
+    return `<div class="outfit-stage">${["a", "b"].map(w => `<div class="outfit-who">${avatarSVG(w, d[w] || currentOutfit(w), "bounce")}<span>${esc(w === "a" ? na : nb)}</span></div>`).join("")}</div>
       ${d.occasion ? `<p class="outfit-oc">${esc(d.occasion)}</p>` : ""}
       ${d.photo && d.photo._url ? `<figure class="outfit-photo"><img src="${esc(d.photo._url)}" alt="${esc(d.caption || "our outfits")}">${d.caption ? `<figcaption>${esc(d.caption)}</figcaption>` : ""}</figure>` : ""}`;
   },
   edit: s => {
     const [na, nb] = names(), d = s.data;
     return `<input class="wide-in" data-oc value="${esc(d.occasion)}" placeholder="What was the occasion? e.g. picnic outfits">
-      <div class="outfit-edit"><div><h4>${esc(na)}</h4><div data-av="a"></div></div><div><h4>${esc(nb)}</h4><div data-av="b"></div></div></div>
-      <div class="outfit-pic">${d.photo && d.photo._url ? `<img src="${esc(d.photo._url)}" alt=""><button type="button" class="ghostb" data-rmphoto>Remove picture</button>` : `<button type="button" class="ghostb" data-photo>＋ Add an AI-made picture of us (optional)</button>`}
+      <div class="outfit-pic"><button type="button" class="ghostb" data-upof>⬆ Upload an outfit file (.json) for both of us</button><p class="hint">The file is made from your outfit photo, with the outfit prompt. It also joins the outfit library on About us.</p></div>
+      <div class="outfit-edit"><div><h4>${esc(na)}</h4><div data-ofp="a"></div></div><div><h4>${esc(nb)}</h4><div data-ofp="b"></div></div></div>
+      <div class="outfit-pic">${d.photo && d.photo._url ? `<img src="${esc(d.photo._url)}" alt=""><button type="button" class="ghostb" data-rmphoto>Remove picture</button>` : `<button type="button" class="ghostb" data-photo>＋ Add a real photo of the outfits (optional)</button>`}
         <input class="wide-in" data-cap value="${esc(d.caption)}" placeholder="Caption for the picture"></div>`;
   },
   bind: (body, s, ctx) => {
-    const d = s.data;
-    ["a", "b"].forEach(w => avatarBuilder($(`[data-av=${w}]`, body), {
-      get: () => avatarFor(w, d), groups: OUTFIT_GROUPS,
-      set: (k, v) => { d[w] = d[w] || {}; d[w][k] = v; ctx.save(); }
-    }));
+    const d = s.data, paints = {};
+    ["a", "b"].forEach(w => { paints[w] = outfitPicker($(`[data-ofp=${w}]`, body), w, {
+      get: () => d[w] || currentOutfit(w),
+      set: id => { d[w] = id; ctx.save(); },
+      onRemove: id => { STATE.outfits = STATE.outfits.filter(o => o.id !== id); ["a", "b"].forEach(x => { if (d[x] === id) d[x] = ""; }); saveState(); ctx.rerender(); }
+    }); });
+    $("[data-upof]", body).onclick = async () => {
+      const files = await pickFiles(true, ".json,application/json");
+      if (!files.length) return;
+      const r = await importOutfitFiles(files);
+      if (r.bad.length) toast(`Couldn't read: ${r.bad.join(", ")}. Is it an outfit file?`);
+      if (r.added.length) {
+        const first = {}; r.added.forEach(o => { if (!first[o.who]) first[o.who] = o; });
+        ["a", "b"].forEach(w => { if (first[w]) d[w] = first[w].id; });
+        saveState(); toast("Outfit added."); ctx.rerender();
+      }
+    };
     $("[data-oc]", body).addEventListener("input", e => { d.occasion = e.target.value; ctx.save(); });
     $("[data-cap]", body).addEventListener("input", e => { d.caption = e.target.value; ctx.save(); });
     const ph = $("[data-photo]", body);

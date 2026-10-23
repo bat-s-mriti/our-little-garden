@@ -240,9 +240,9 @@ async function pageMap() {
   done(`<main class="wrap">${crumb()}${pageTitle("Our map", sub ? sub + "." : "")}
     ${pts.length || homes.length ? `<div class="bigmap" id="bigmap"></div>
       <div class="maplist">${homes.length ? `<div class="ml-day"><a href="${L("/about-us")}">${stickerHTML("e:🏡", 22)} Our homes</a>
-        <ul>${homes.map((h, i) => `<li><button type="button" data-flyh="${i}">🏡 ${esc(names()[h.w === "a" ? 0 : 1])}${h.p.addr ? " · " + esc(h.p.addr) : ""}</button></li>`).join("")}</ul></div>` : ""}
+        <ul>${homes.map((h, i) => `<li><button type="button" data-flyh="${i}">🏡 ${esc(names()[h.w === "a" ? 0 : 1])}${h.p.addr ? " · " + esc(h.p.addr) : ""}</button> <a class="gmap" href="${esc(gmapsUrl(h.p))}" target="_blank" rel="noopener">Google Maps ↗</a></li>`).join("")}</ul></div>` : ""}
       ${[...new Set(pts.map(p => p.d))].map(d => `<div class="ml-day"><a href="${L("/day/" + encodeURIComponent(d.slug))}">${stickerHTML(d.badge, 22)} ${esc(d.title)} <small>${esc(prettyDate(d.date, true))}</small></a>
-        <ul>${pts.filter(p => p.d === d).map(p => `<li><button type="button" data-fly="${pts.indexOf(p)}">📍 ${esc(p.r.name || "Somewhere lovely")}</button></li>`).join("")}</ul></div>`).join("")}</div>`
+        <ul>${pts.filter(p => p.d === d).map(p => `<li><button type="button" data-fly="${pts.indexOf(p)}">📍 ${esc(p.r.name || "Somewhere lovely")}</button> <a class="gmap" href="${esc(gmapsUrl(p.r))}" target="_blank" rel="noopener">Google Maps ↗</a></li>`).join("")}</ul></div>`).join("")}</div>`
       : emptyMsg("No places yet. Add a “Places &amp; map” section to a day and pin where you went, or pin your homes in About us.")}
     </main>${footerHTML()}`, () => {
     if (!pts.length && !homes.length) return;
@@ -525,7 +525,7 @@ function profileView(w) {
   if (p.full && canSee(p, "full")) rows.push(["Full name", esc(p.full) + lockMark(p, "full")]);
   if (p.nick && canSee(p, "nick")) rows.push(["Also called", esc(p.nick) + lockMark(p, "nick")]);
   if (p.birth && canSee(p, "birth")) rows.push(["Birthday", `${esc(prettyDate(p.birth))}${lockMark(p, "birth")}<div class="bd">${bdayLines(p)}</div>`]);
-  if (p.addr && canSee(p, "addr")) rows.push(["Home", `${esc(p.addr)}${lockMark(p, "addr")}${hasPin(p) ? ` · <a href="${L("/map")}">on our map</a>` : ""}`]);
+  if (p.addr && canSee(p, "addr")) rows.push(["Home", `${esc(p.addr)}${lockMark(p, "addr")}${hasPin(p) ? ` · <a href="${L("/map")}">on our map</a> · <a href="${esc(gmapsUrl(p))}" target="_blank" rel="noopener">Google Maps ↗</a>` : ""}`]);
   if (p.phone && canSee(p, "phone")) rows.push(["Phone", `<a href="tel:${esc(p.phone.replace(/[^\d+]/g, ""))}">${esc(p.phone)}</a>${lockMark(p, "phone")}`]);
   if (p.email && canSee(p, "email")) rows.push(["Email", `<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>${lockMark(p, "email")}`]);
   p.extra.filter(r => r.k && r.v && (EDIT || !r.priv)).forEach(r => rows.push([esc(r.k), esc(r.v) + (EDIT && r.priv ? ` <span class="lockmark" title="Only you can see this">🔒</span>` : "")]));
@@ -583,7 +583,7 @@ async function pageAbout() {
   document.title = "About us · " + STATE.title;
   const [na, nb] = names(), dt = daysTogether();
   const paint = () => done(`<main class="wrap">${crumb()}${pageTitle("About us")}
-    <section class="aboutpair reveal"><div class="ab-who">${avatarSVG(avatarFor("a"), "bounce")}<b>${esc(na)}</b></div><span class="ab-heart">${stickerHTML("heart", 44)}</span><div class="ab-who">${avatarSVG(avatarFor("b"), "bounce d2")}<b>${esc(nb)}</b></div></section>
+    <section class="aboutpair reveal"><div class="ab-who">${avatarSVG("a", null, "bounce")}<b>${esc(na)}</b></div><span class="ab-heart">${stickerHTML("heart", 44)}</span><div class="ab-who">${avatarSVG("b", null, "bounce d2")}<b>${esc(nb)}</b></div></section>
     ${STATE.since ? `<p class="statnote">Together since <b>${esc(prettyDate(STATE.since))}</b>${dt >= 0 ? ` · ${dt.toLocaleString()} days` : ""}</p>` : ""}
     ${EDIT ? `<p class="hint pnote">🔒 Tick the lock next to anything you don't want visitors to see. Locked details stay on your device, and Publish leaves them out. Everything else is visible to anyone who has the link.</p>` : ""}
     <section class="profiles">${EDIT ? profileEdit("a") + profileEdit("b") : profileView("a") + profileView("b")}</section>
@@ -593,7 +593,7 @@ async function pageAbout() {
     ${EDIT || STATE.about.facts.length ? `<section class="facts"><h3>Little facts</h3><ul>${STATE.about.facts.map((f, i) => EDIT
       ? `<li class="rowline" data-i="${i}"><input class="grow" data-k="k" value="${esc(f.k)}" placeholder="Favorite…"><input class="grow" data-k="v" value="${esc(f.v)}" placeholder="…is"><button type="button" class="x" data-delfact="${i}">✕</button></li>`
       : `<li><span>${esc(f.k)}</span><b>${esc(f.v)}</b></li>`).join("")}</ul>${EDIT ? `<button type="button" class="addrow" id="addFact">＋ Add a fact</button>` : ""}</section>` : ""}
-    ${EDIT ? `<section class="looks"><h3>Dress up the mini us</h3><p class="hint">Their looks here are the base. Each day's outfit section only changes the clothes.</p><div class="outfit-edit"><div><h4>${esc(na)}</h4><div data-av="a"></div></div><div><h4>${esc(nb)}</h4><div data-av="b"></div></div></div></section>` : ""}
+    ${EDIT ? `<section class="looks"><h3>Our outfits</h3><p class="hint">Scroll through the outfit library and tap one to put it on. Outfits come from outfit files, so they always match what you really wore.</p><button type="button" class="ghostb" id="upOutfit">⬆ Upload an outfit file (.json)</button><div class="outfit-edit"><div><h4>${esc(na)}</h4><div data-ofp="a"></div></div><div><h4>${esc(nb)}</h4><div data-ofp="b"></div></div></div></section>` : ""}
     </main>${footerHTML()}`, () => {
     mountBetween();
     if (!EDIT) return;
@@ -601,10 +601,19 @@ async function pageAbout() {
     $("#addFact").onclick = () => { STATE.about.facts.push({ k: "", v: "" }); saveState(); paint(); };
     $(".facts").addEventListener("input", e => { const li = e.target.closest("[data-i]"); if (li && e.target.dataset.k) { STATE.about.facts[+li.dataset.i][e.target.dataset.k] = e.target.value; saveSoon(); } });
     $$("[data-delfact]").forEach(b => b.onclick = () => { STATE.about.facts.splice(+b.dataset.delfact, 1); saveState(); paint(); });
-    ["a", "b"].forEach(w => avatarBuilder($(`[data-av=${w}]`), {
-      get: () => avatarFor(w), groups: BASE_GROUPS,
-      set: (k, v) => { STATE.about[w][k] = v; saveSoon(); }
+    const wear = w => { const svg = $$(".ab-who svg")[w === "a" ? 0 : 1]; if (svg) svg.innerHTML = avatarInner(w); };
+    ["a", "b"].forEach(w => outfitPicker($(`[data-ofp=${w}]`), w, {
+      get: () => currentOutfit(w),
+      set: id => { STATE.about.outfit[w] = id; saveState(); wear(w); },
+      onRemove: id => { STATE.outfits = STATE.outfits.filter(o => o.id !== id); if (STATE.about.outfit[w] === id) STATE.about.outfit[w] = DEFAULT_OUTFIT[w]; saveState(); paint(); }
     }));
+    $("#upOutfit").onclick = async () => {
+      const files = await pickFiles(true, ".json,application/json");
+      if (!files.length) return;
+      const r = await importOutfitFiles(files);
+      if (r.bad.length) toast(`Couldn't read: ${r.bad.join(", ")}. Is it an outfit file?`);
+      if (r.added.length) { r.added.forEach(o => { STATE.about.outfit[o.who] = o.id; }); saveState(); toast("Outfit added."); paint(); }
+    };
     $$(".prof.editing").forEach(card => {
       const w = card.dataset.w, p = STATE.about.p[w];
       const calc = () => { $("[data-calc]", card).innerHTML = p.birth ? bdayLines(p) : ""; };

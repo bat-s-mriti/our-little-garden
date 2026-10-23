@@ -534,3 +534,5 @@ button.sg.on { opacity: 1; border-color: var(--leaf); border-width: 2px; }
 .dist span { display: block; font-weight: 700; }
 .dist small { display: block; color: var(--muted); }
 @media (max-width: 520px) { .prof dl > div { grid-template-columns: 1fr; gap: 0; } .calc { margin-left: 0; } }
+
+.gmap { display: inline-block; margin-left: 8px; font-size: .8rem; color: var(--muted); }

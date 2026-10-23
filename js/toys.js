@@ -143,8 +143,8 @@ const TOYS = {
     </g>`,
   us: () => `
     <g class="t-us">
-      <g transform="translate(-1 14) scale(.5)"><g class="t-a">${avatarInner(Object.assign({}, AV_DEFAULT.a, STATE.about.a))}</g></g>
-      <g transform="translate(51 14) scale(.5)"><g class="t-b">${avatarInner(Object.assign({}, AV_DEFAULT.b, STATE.about.b))}</g></g>
+      <g transform="translate(-1 14) scale(.5)"><g class="t-a">${avatarInner("a")}</g></g>
+      <g transform="translate(51 14) scale(.5)"><g class="t-b">${avatarInner("b")}</g></g>
       <path class="t-lh" d="M50 24 C44 19 45 13 48 13 C49.5 13 50 15 50 15 C50 15 50.5 13 52 13 C55 13 56 19 50 24Z" fill="#f2698b" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/>
     </g>`
 };

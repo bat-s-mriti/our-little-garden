@@ -14,6 +14,8 @@ Open the site with `?edit` (for example `https://your-site/?edit`). Edit mode st
 - About us has a card for each of you: full name, nicknames, birthday (age in years, months and days, countdown to the next birthday, star sign), home address with a map pin, phone, email, your own extra details, and your own favourite songs, foods, films and places. Pinning both homes shows them on the map with the straight-line distance (displacement) and the road distance (from the free OSRM service).
 - Each day is built from optional, reorderable sections: note, photos and videos, polaroids, places and map, food, spending, outfit, song, movies, quotes, love notes, highlight, bucket ticks, scorecard, tickets, voice notes.
 - Photos and videos can be added in bulk or dropped onto a section. Videos autoplay one at a time.
+- Outfits are not editable. Each person has a fixed head (`js/heads.js`) and wears an outfit from the outfit library: a few built-in ones plus any you upload as an outfit file (made from a photo with the outfit prompt). In About us (edit mode) scroll the library and tap one to wear it; in a day's outfit section upload a file for both of you and pick per person. The heads are also in the sticker library.
+- Places have an “Open in Google Maps” link (no key needed); maps stay on OpenStreetMap.
 - The Stickers page controls the flowers and emoji used around the site and in the background.
 
 ## Publishing (one click)
@@ -40,7 +42,7 @@ Upload changed files to the repo (GitHub: Add file → Upload files; folders kee
 ## Files
 - `index.html`, `404.html`: the page shell (identical).
 - `css/style.css`, `css/cottage.css`, `css/edit.css`: styles; `edit.css` only loads in edit mode.
-- `js/`: the site's code (`core`, `ui`, `pages`, `sections`, `app`, `publish`, `zip`, `music`, `tinymap`, `avatar`, `toys`, `icons`).
+- `js/`: the site's code (`core`, `ui`, `pages`, `sections`, `app`, `publish`, `zip`, `music`, `tinymap`, `heads`, `avatar`, `toys`, `icons`).
 - `data.js`: starter content shown until something is published.
 - `content/`: your published data and media.
 - `_redirects`: Netlify fallback. `serve.py`: local preview (`python3 serve.py`, then open http://localhost:8000).
