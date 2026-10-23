@@ -102,9 +102,36 @@ async function pageHome() {
       ${cards.length ? `<section class="grid stagger">${cards.join("")}</section>` : emptyMsg("No days yet. Open the edit link to add the first one.")}
     </main>${footerHTML()}`, () => {
     $("#heroRow").addEventListener("click", e => burst(e.clientX, e.clientY));
+    liftRoom();
     const nd = $("#newDay");
     if (nd) nd.onclick = () => newDayDialog();
   });
+}
+
+/* keep the tables above the footer grass when scrolled to the bottom (wide room only) */
+function liftRoom() {
+  const room = $(".room"), foot = $(".foot");
+  if (!room || !foot) return;
+  if (window.__liftOff) window.__liftOff();
+  let raf = 0;
+  const calc = () => {
+    raf = 0;
+    if (!room.isConnected) { off(); return; }
+    room.style.setProperty("--lift", "0px");
+    if (getComputedStyle(room).position !== "fixed") return;
+    const vh = innerHeight, need = Math.max(0, vh - (foot.getBoundingClientRect().top - (parseFloat(getComputedStyle(foot).getPropertyValue("--dy")) || 0)) + 6);
+    if (!need) return;
+    const bee = room.querySelector(".it.bee"), tb = room.querySelector(".it.t");
+    let cap = need;
+    if (bee && tb) cap = Math.max(0, Math.min(need, tb.offsetTop - (bee.offsetTop + bee.offsetHeight) - 18));
+    room.style.setProperty("--lift", cap + "px");
+  };
+  const q = () => { if (!raf) raf = requestAnimationFrame(calc); };
+  const ro = window.ResizeObserver ? new ResizeObserver(q) : null;
+  const off = () => { removeEventListener("scroll", q); removeEventListener("resize", q); if (ro) ro.disconnect(); window.__liftOff = null; };
+  addEventListener("scroll", q, { passive: true }); addEventListener("resize", q);
+  if (ro) ro.observe(document.body);
+  setTimeout(q, 700); window.__liftOff = off; calc();
 }
 
 function newDayDialog(date) {
